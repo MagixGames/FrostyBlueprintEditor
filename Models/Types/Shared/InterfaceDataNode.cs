@@ -13,13 +13,13 @@ namespace BlueprintEditor.Models.Types.Shared
         public override string Name { get; set; } = "";
         public override string ObjectType { get; } = "EditorInterfaceNode"; //Not a real type
 
-        public override ObservableCollection<InputViewModel> Inputs { get; set; } =
-            new ObservableCollection<InputViewModel>()
+        public override List<InputViewModel> Inputs { get; set; } =
+            new List<InputViewModel>()
             {
             };
 
-        public override ObservableCollection<OutputViewModel> Outputs { get; set; } =
-            new ObservableCollection<OutputViewModel>()
+        public override List<OutputViewModel> Outputs { get; set; } =
+            new List<OutputViewModel>()
             {
             };
 
@@ -44,12 +44,12 @@ namespace BlueprintEditor.Models.Types.Shared
                                 new SolidColorBrush(
                                     (Color)ColorConverter.ConvertFromString("#00FF21")), //Property connection color
                             Object = interfaceItem,
-                            Outputs = new ObservableCollection<OutputViewModel>()
+                            Outputs = new List<OutputViewModel>()
                             {
                                 new OutputViewModel() { Title = interfaceItem.Name, Type = ConnectionType.Property }
                             }
                         };
-                        InterfaceDataNodes.Add(interfaceNode);
+                        InterfaceOutputDataNodes.Add(interfaceItem.Name, interfaceNode);
                         return interfaceNode;
                     }
                     else
@@ -61,12 +61,12 @@ namespace BlueprintEditor.Models.Types.Shared
                                 new SolidColorBrush(
                                     (Color)ColorConverter.ConvertFromString("#00FF21")), //Property connection color
                             Object = interfaceItem,
-                            Inputs = new ObservableCollection<InputViewModel>()
+                            Inputs = new List<InputViewModel>()
                             {
                                 new InputViewModel() { Title = interfaceItem.Name, Type = ConnectionType.Property }
                             }
                         };
-                        InterfaceDataNodes.Add(interfaceNode);
+                        InterfaceInputDataNodes.Add(interfaceItem.Name, interfaceNode);
                         return interfaceNode;
                     }
 
@@ -83,12 +83,12 @@ namespace BlueprintEditor.Models.Types.Shared
                                 new SolidColorBrush(
                                     (Color)ColorConverter.ConvertFromString("#FFFFFF")), //Event connection color
                             Object = interfaceItem,
-                            Outputs = new ObservableCollection<OutputViewModel>()
+                            Outputs = new List<OutputViewModel>()
                             {
                                 new OutputViewModel() { Title = interfaceItem.Name, Type = ConnectionType.Event }
                             }
                         };
-                        InterfaceDataNodes.Add(interfaceNode);
+                        InterfaceOutputDataNodes.Add(interfaceItem.Name, interfaceNode);
                         return interfaceNode;
                     }
                     else
@@ -100,12 +100,12 @@ namespace BlueprintEditor.Models.Types.Shared
                                 new SolidColorBrush(
                                     (Color)ColorConverter.ConvertFromString("#FFFFFF")), //Event connection color
                             Object = interfaceItem,
-                            Inputs = new ObservableCollection<InputViewModel>()
+                            Inputs = new List<InputViewModel>()
                             {
                                 new InputViewModel() { Title = interfaceItem.Name, Type = ConnectionType.Event }
                             },
                         };
-                        InterfaceDataNodes.Add(interfaceNode);
+                        InterfaceInputDataNodes.Add(interfaceItem.Name, interfaceNode);
                         return interfaceNode;
                     }
                     break;
@@ -121,12 +121,12 @@ namespace BlueprintEditor.Models.Types.Shared
                                 new SolidColorBrush(
                                     (Color)ColorConverter.ConvertFromString("#0094FF")), //Link connection color
                             Object = interfaceItem,
-                            Outputs = new ObservableCollection<OutputViewModel>()
+                            Outputs = new List<OutputViewModel>()
                             {
                                 new OutputViewModel() { Title = interfaceItem.Name, Type = ConnectionType.Link }
                             }
                         };
-                        InterfaceDataNodes.Add(interfaceNode);
+                        InterfaceOutputDataNodes.Add(interfaceItem.Name, interfaceNode);
                         return interfaceNode;
                     }
                     else
@@ -138,12 +138,12 @@ namespace BlueprintEditor.Models.Types.Shared
                                 new SolidColorBrush(
                                     (Color)ColorConverter.ConvertFromString("#0094FF")), //Link connection color
                             Object = interfaceItem,
-                            Inputs = new ObservableCollection<InputViewModel>()
+                            Inputs = new List<InputViewModel>()
                             {
                                 new InputViewModel() { Title = interfaceItem.Name, Type = ConnectionType.Link }
                             }
                         };
-                        InterfaceDataNodes.Add(interfaceNode);
+                        InterfaceInputDataNodes.Add(interfaceItem.Name, interfaceNode);
                         return interfaceNode;
                     }
                     break;
@@ -151,7 +151,8 @@ namespace BlueprintEditor.Models.Types.Shared
             }
         }
 
-        public static List<InterfaceDataNode> InterfaceDataNodes = new List<InterfaceDataNode>();
+        public static Dictionary<string, InterfaceDataNode> InterfaceInputDataNodes = new Dictionary<string, InterfaceDataNode>();
+        public static Dictionary<string, InterfaceDataNode> InterfaceOutputDataNodes = new Dictionary<string, InterfaceDataNode>();
 
         public override bool Equals(object obj)
         {
@@ -160,7 +161,7 @@ namespace BlueprintEditor.Models.Types.Shared
             if (obj.GetType() == GetType())
             {
                 return ((InterfaceDataNode)obj).Name == Name && ((InterfaceDataNode)obj).Outputs == Outputs 
-                                                             && ((InterfaceDataNode)obj).Inputs == Inputs;
+                                                                && ((InterfaceDataNode)obj).Inputs == Inputs;
             }
 
             return obj.GetType() == Object.GetType() && (bool)Object.Equals(obj);

@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using BlueprintEditor.Models.Connections;
 
 namespace BlueprintEditor.Models.Types.ExampleTypes
@@ -30,8 +31,8 @@ namespace BlueprintEditor.Models.Types.ExampleTypes
         /// Each input allows you to customize the Title, so its name
         /// And its type, so Event, Property, and Link
         /// </summary>
-        public override ObservableCollection<InputViewModel> Inputs { get; set; } =
-            new ObservableCollection<InputViewModel>()
+        public override List<InputViewModel> Inputs { get; set; } =
+            new List<InputViewModel>()
             {
                 new InputViewModel() {Title = "Bool", Type = ConnectionType.Property},
                 new InputViewModel() {Title = "In", Type = ConnectionType.Event},
@@ -42,8 +43,8 @@ namespace BlueprintEditor.Models.Types.ExampleTypes
         /// Each input allows you to customize the Title, so its name
         /// And its type, so Event, Property, and Link
         /// </summary>
-        public override ObservableCollection<OutputViewModel> Outputs { get; set; } =
-            new ObservableCollection<OutputViewModel>()
+        public override List<OutputViewModel> Outputs { get; set; } =
+            new List<OutputViewModel>()
             {
                 new OutputViewModel() {Title = "OnTrue", Type = ConnectionType.Event},
                 new OutputViewModel() {Title = "OnFalse", Type = ConnectionType.Event}

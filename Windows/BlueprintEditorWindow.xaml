@@ -121,7 +121,9 @@
                             <nodify:LineConnection Source="{Binding Source.Anchor}"
                                                    Target="{Binding Target.Anchor}"
                                                    Fill="{Binding ConnectionColor}"
-                                                   Stroke="{Binding ConnectionColor}" />
+                                                   Stroke="{Binding ConnectionColor}" 
+                                                   ArrowSize="0,0"
+                                                   />
                         </DataTemplate>
                     </nodify:NodifyEditor.ConnectionTemplate>
 

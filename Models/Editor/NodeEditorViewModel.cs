@@ -24,9 +24,9 @@ namespace BlueprintEditor.Models.Editor
     /// </summary>
     public class EditorViewModel
     {
-        public ObservableCollection<NodeBaseModel> Nodes { get; } = new ObservableCollection<NodeBaseModel>();
-        public ObservableCollection<NodeBaseModel> SelectedNodes { get; } = new ObservableCollection<NodeBaseModel>();
-        public ObservableCollection<ConnectionViewModel> Connections { get; } = new ObservableCollection<ConnectionViewModel>();
+        public List<NodeBaseModel> Nodes { get; } = new List<NodeBaseModel>();
+        public List<NodeBaseModel> SelectedNodes { get; } = new List<NodeBaseModel>();
+        public List<ConnectionViewModel> Connections { get; } = new List<ConnectionViewModel>();
         public PendingConnectionViewModel PendingConnection { get; }
         public ICommand DisconnectConnectorCommand { get; }
 

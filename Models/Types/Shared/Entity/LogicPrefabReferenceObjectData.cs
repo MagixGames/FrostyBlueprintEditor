@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using BlueprintEditor.Models.Connections;
 using BlueprintEditor.Utils;
@@ -14,14 +15,14 @@ namespace BlueprintEditor.Models.Types.Shared
         public override string Name { get; set; } = "LogicPrefab (null ref)";
         public override string ObjectType { get; } = "LogicPrefabReferenceObjectData";
 
-        public override ObservableCollection<InputViewModel> Inputs { get; set; } =
-            new ObservableCollection<InputViewModel>()
+        public override List<InputViewModel> Inputs { get; set; } =
+            new List<InputViewModel>()
             {
                 new InputViewModel() {Title = "BlueprintTransform", Type = ConnectionType.Property},
             };
 
-        public override ObservableCollection<OutputViewModel> Outputs { get; set; } =
-            new ObservableCollection<OutputViewModel>();
+        public override List<OutputViewModel> Outputs { get; set; } =
+            new List<OutputViewModel>();
 
         public override void OnCreation()
         {

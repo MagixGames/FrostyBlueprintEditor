@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
@@ -50,8 +51,8 @@ namespace BlueprintEditor.Models.Types
             set => RealWidth = value;
         }
         
-        public virtual ObservableCollection<InputViewModel> Inputs { get; set; } = new ObservableCollection<InputViewModel>();
-        public virtual ObservableCollection<OutputViewModel> Outputs { get; set; } = new ObservableCollection<OutputViewModel>();
+        public virtual List<InputViewModel> Inputs { get; set; } = new List<InputViewModel>();
+        public virtual List<OutputViewModel> Outputs { get; set; } = new List<OutputViewModel>();
         
         public event PropertyChangedEventHandler PropertyChanged;
 

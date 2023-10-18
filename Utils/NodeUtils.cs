@@ -315,10 +315,10 @@ namespace BlueprintEditor.Utils
         /// <param name="objectType">The type of the object we are generating off of</param>
         /// <param name="nodeBaseModel"></param>
         /// <returns>Inputs for a node</returns>
-        public static ObservableCollection<InputViewModel> GenerateNodeInputs(Type objectType,
+        public static List<InputViewModel> GenerateNodeInputs(Type objectType,
             NodeBaseModel nodeBaseModel)
         {
-            ObservableCollection<InputViewModel> inputs = new ObservableCollection<InputViewModel>();
+            List<InputViewModel> inputs = new List<InputViewModel>();
             foreach (PropertyInfo property in objectType.GetProperties())
             {
                 if (property.Name == "Flags" 
