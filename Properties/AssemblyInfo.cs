@@ -1,8 +1,8 @@
 ﻿using Frosty.Core.Attributes;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
+using BlueprintEditorPlugin.Attributes;
+using BlueprintEditorPlugin.Editors.BlueprintEditor.Extensions;
 using BlueprintEditorPlugin.Extensions;
 using BlueprintEditorPlugin.Options;
 
@@ -27,7 +27,14 @@ using BlueprintEditorPlugin.Options;
 [assembly: PluginAuthor("Blueprint Editor Team")]
 [assembly: PluginVersion("1.0.0")]
 
-[assembly: RegisterMenuExtension(typeof(ViewBlueprintMenuExtension))]
 [assembly: RegisterDataExplorerContextMenu(typeof(ViewBlueprintContextMenuItem))]
-[assembly: RegisterOptionsExtension(typeof(BlueprintEditorOptions))]
+[assembly: RegisterOptionsExtension(typeof(GraphEditorOptions))]
 [assembly: RegisterStartupAction(typeof(BlueprintEditorStartupAction))]
+[assembly: RegisterMenuExtension(typeof(ViewHashingUtils))]
+
+[assembly: RegisterBlueprintMenuExtension(typeof(AlignHorizontallyExtension))]
+[assembly: RegisterBlueprintMenuExtension(typeof(AlignVerticallyExtension))]
+[assembly: RegisterBlueprintMenuExtension(typeof(DistributeHorizontallyMenuExtension))]
+[assembly: RegisterBlueprintMenuExtension(typeof(DistributeVerticallyMenuExtension))]
+[assembly: RegisterBlueprintMenuExtension(typeof(GenerateBoilerPlateExtension))]
+[assembly: RegisterBlueprintMenuExtension(typeof(SelectAssetMenuExtension))]

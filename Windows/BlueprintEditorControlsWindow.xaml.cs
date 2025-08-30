@@ -10,12 +10,20 @@ namespace BlueprintEditorPlugin.Windows
         {
             InitializeComponent();
             ControlsText.Text = "Delete: Removes the selected nodes " +
+                                "\nShift + S: Save the current layout" +
                                 "\nShift + D: Duplicate the selected nodes" +
-                                "\nShift + Left Click: Add a node to the current selection" +
-                                "\nAlt + Left Click: Remove a node from the current selection" +
-                                "\nShift + Right Click: Place the currently selected node in the toolbox at the mouse position";
+                                "\nShift + Right Click: Place the currently selected node in the toolbox at the mouse position" +
+                                "\nAlt + Enter: When editing in the property grid, this will apply the edit to all selected nodes." +
+                                "\nCtrl + C: Copies the selected node/object in the graph editor to the clipboard" +
+                                "\nCtrl + X: Cuts the selected node/object from the graph editor and copies it to the clipboard" +
+                                "\nCtrl + V: Pastes the object from the clipboard to the graph editor";
 
-            CreditsText.Text = "Emanuel Miroiu - Nodify library used for Node Editor controls\n" +
+            SearchText.Text = "\"guid:{NodeGuid}\" Searches for a node with a matching guid" +
+                              "\n\"fguid:{FileGuid}\" Searches for a node with a matching file guid " +
+                              "\n\"hasproperty:{PropertyName}\" Searches for a node with a property of this name" +
+                              "\n\"hasvalue:{PropertyName},{Value}\" Searches for a node with a property of this name and value";
+
+            CreditsText.Text = "Emanuel Miroiu - Nodify library used for Graph Editor\n" +
                                "MagixGames - Optimizations to loading Ebx into graphed form\n" +
                                "Mophead01 - Original ObjectFlags calculation implementation\n" +
                                "CosmicDreams - Assistance with determining realms automatically\n" +
