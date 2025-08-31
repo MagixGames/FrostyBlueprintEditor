@@ -28,7 +28,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.TypeMapping.Shared
         {
             base.OnCreation();
 
-            AddOutput("Value", ConnectionType.Property);
+            AddOutput("Out", ConnectionType.Property);
         }
     }
 }
