@@ -109,7 +109,11 @@ namespace BlueprintEditorPlugin
                 try
                 {
                     FileInfo fileInfo = new(item);
-                    Assembly plugin = Assembly.LoadFile(fileInfo.FullName);
+                    Assembly plugin;
+                    try
+                    {
+                        plugin = Assembly.LoadFile(fileInfo.FullName);
+                    } catch (Exception e) { continue; }
 
                     foreach (Attribute attribute in plugin.GetCustomAttributes())
                     {

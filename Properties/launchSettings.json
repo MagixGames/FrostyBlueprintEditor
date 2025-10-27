@@ -1,9 +1,0 @@
-﻿{
-  "profiles": {
-    "BlueprintEditorPlugin": {
-      "commandName": "Executable",
-      "executablePath": "{FrostyPathHere}\\FrostyToolsuite\\FrostyEditor\\bin\\Developer\\Debug\\FrostyEditor.exe",
-      "workingDirectory": "{FrostyPathHere}\\FrostyToolsuite\\FrostyEditor\\bin\\Developer\\Debug"
-    }
-  }
-}
