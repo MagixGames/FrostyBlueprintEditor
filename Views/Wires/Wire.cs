@@ -19,8 +19,9 @@ namespace BlueprintEditorPlugin.Views.Wires
                 case ConnectionStyle.Curvy:
                 {
                     context.BeginFigure(Source, false, false);
-                    Point curve1 = new Point(Source.X + 85, Source.Y);
-                    Point curve2 = new Point(Target.X - 85, Target.Y);
+                    double offset = Math.Max(40, Math.Min(150, Math.Abs(Target.X - Source.X) * 0.5));
+                    Point curve1 = new Point(Source.X + offset, Source.Y);
+                    Point curve2 = new Point(Target.X - offset, Target.Y);
                     
                     context.PolyBezierTo(new List<Point> {curve1, curve2, Target}, true, false);
                 } break;
@@ -32,10 +33,11 @@ namespace BlueprintEditorPlugin.Views.Wires
                 case ConnectionStyle.StartStop:
                 {
                     context.BeginFigure(Source, false, false);
-                    Point curve1 = new Point(Source.X + 25, Source.Y);
+                    double offset = Math.Max(40, Math.Min(150, Math.Abs(Target.X - Source.X) * 0.5));
+                    Point curve1 = new Point(Source.X + offset, Source.Y);
                     context.LineTo(curve1, true, false);
             
-                    Point curve2 = new Point(Target.X - 25, Target.Y);
+                    Point curve2 = new Point(Target.X - offset, Target.Y);
                     context.LineTo(curve2, true, false);
                     context.LineTo(Target, true, false);
                 } break;
