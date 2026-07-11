@@ -26,6 +26,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
         public IPort OriginalTarget { get; set; }
 
+        public Guid NodeId { get; set; } = Guid.NewGuid();
+
         public override string Header => "Wrangler";
 
         #region IRedirect
@@ -148,6 +150,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
             // New format
             int version = first;
+            NodeId = reader.ReadGuid();
             ConnectionType = (ConnectionType)reader.ReadInt();
             Location = reader.ReadPoint();
             Size = new Size(16, 16);
@@ -155,24 +158,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
             if (version >= FormatVersion)
             {
-                // Read OriginalSource port ref
-                if (reader.ReadBoolean())
-                {
-                    AssetClassGuid guid = reader.ReadAssetClassGuid();
-                    string portName = reader.ReadNullTerminatedString();
-                    ConnectionType portType = (ConnectionType)reader.ReadInt();
-                    OriginalSource = FindPort(guid, portName, portType, PortDirection.Out);
-                }
-
-                // Read OriginalTarget port ref
-                if (reader.ReadBoolean())
-                {
-                    AssetClassGuid guid = reader.ReadAssetClassGuid();
-                    string portName = reader.ReadNullTerminatedString();
-                    ConnectionType portType = (ConnectionType)reader.ReadInt();
-                    OriginalTarget = FindPort(guid, portName, portType, PortDirection.In);
-                }
-
+                OriginalSource = ReadPortRef(reader);
+                OriginalTarget = ReadPortRef(reader);
                 _loadedFromLayout = true;
             }
 
@@ -182,6 +169,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
         public void Save(LayoutWriter writer)
         {
             writer.Write(FormatVersion);
+            writer.Write(NodeId);
             writer.Write((int)ConnectionType);
             writer.Write(Location);
 
@@ -196,7 +184,16 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             if (port?.Node is IEntityNode entityNode)
             {
                 writer.Write(true);
+                writer.Write((byte)0);
                 writer.Write(entityNode.InternalGuid);
+                writer.WriteNullTerminatedString(port.Name);
+                writer.Write((int)((EntityPort)port).Type);
+            }
+            else if (port?.Node is WranglerNode wranglerNode)
+            {
+                writer.Write(true);
+                writer.Write((byte)1);
+                writer.Write(wranglerNode.NodeId);
                 writer.WriteNullTerminatedString(port.Name);
                 writer.Write((int)((EntityPort)port).Type);
             }
@@ -206,20 +203,59 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             }
         }
 
-        private IPort FindPort(AssetClassGuid guid, string portName, ConnectionType portType, PortDirection direction)
+        private IPort ReadPortRef(LayoutReader reader)
         {
-            foreach (IVertex vertex in NodeWrangler.Vertices)
+            if (!reader.ReadBoolean())
+                return null;
+
+            byte nodeType = reader.ReadByte();
+
+            if (nodeType == 0)
             {
-                if (!(vertex is IEntityNode entityNode))
-                    continue;
+                // IEntityNode: look up by InternalGuid
+                AssetClassGuid guid = reader.ReadAssetClassGuid();
+                string portName = reader.ReadNullTerminatedString();
+                ConnectionType portType = (ConnectionType)reader.ReadInt();
 
-                if (!entityNode.InternalGuid.Equals(guid))
-                    continue;
+                foreach (IVertex vertex in NodeWrangler.Vertices)
+                {
+                    if (!(vertex is IEntityNode entityNode))
+                        continue;
+                    if (!entityNode.InternalGuid.Equals(guid))
+                        continue;
 
-                if (direction == PortDirection.Out)
-                    return entityNode.GetOutput(portName, portType);
+                    IPort port = entityNode.GetOutput(portName, portType);
+                    if (port != null)
+                        return port;
 
-                return entityNode.GetInput(portName, portType);
+                    return entityNode.GetInput(portName, portType);
+                }
+            }
+            else if (nodeType == 1)
+            {
+                // WranglerNode: look up by NodeId
+                Guid nodeId = reader.ReadGuid();
+                string portName = reader.ReadNullTerminatedString();
+                ConnectionType portType = (ConnectionType)reader.ReadInt();
+
+                foreach (IVertex vertex in NodeWrangler.Vertices)
+                {
+                    if (!(vertex is WranglerNode wranglerNode))
+                        continue;
+                    if (wranglerNode.NodeId != nodeId)
+                        continue;
+
+                    foreach (IPort p in wranglerNode.Inputs)
+                    {
+                        if (p.Name == portName && p is EntityPort ep && ep.Type == portType)
+                            return p;
+                    }
+                    foreach (IPort p in wranglerNode.Outputs)
+                    {
+                        if (p.Name == portName && p is EntityPort ep && ep.Type == portType)
+                            return p;
+                    }
+                }
             }
 
             return null;
