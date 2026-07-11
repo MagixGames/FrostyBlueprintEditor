@@ -72,33 +72,39 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
         public override void OnDestruction()
         {
-            if (OriginalSource == null || OriginalTarget == null)
-                return;
-
-            IConnection targetConnection = null;
+            // Find incoming connection to Inputs[0]
+            IConnection incoming = null;
             foreach (IConnection connection in NodeWrangler.GetConnections(Inputs[0]))
             {
                 if (connection.Target == Inputs[0])
                 {
-                    targetConnection = connection;
+                    incoming = connection;
                     break;
                 }
             }
+            if (incoming == null)
+                return;
 
-            if (targetConnection != null)
-            {
-                targetConnection.Target = OriginalTarget;
-            }
-
-            List<IConnection> toRemove = new List<IConnection>();
+            // Find outgoing connections from Outputs[0]
+            List<IConnection> outgoing = new List<IConnection>();
             foreach (IConnection connection in NodeWrangler.GetConnections(Outputs[0]))
             {
                 if (connection.Source == Outputs[0])
-                    toRemove.Add(connection);
+                    outgoing.Add(connection);
+            }
+            if (outgoing.Count == 0)
+                return;
+
+            // Bridge: rewire each outgoing connection to the incoming's source,
+            // splicing this node out of the wire
+            IPort bridgeSource = incoming.Source;
+            foreach (IConnection conn in outgoing)
+            {
+                conn.Source = bridgeSource;
             }
 
-            foreach (IConnection connection in toRemove)
-                NodeWrangler.RemoveConnection(connection);
+            // Remove the incoming connection (now bypassed by the bridged outgoings)
+            NodeWrangler.RemoveConnection(incoming);
         }
 
         public override void OnCreation()
