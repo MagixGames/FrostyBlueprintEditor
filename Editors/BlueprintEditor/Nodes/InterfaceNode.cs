@@ -160,12 +160,22 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
 
         public EntityInput GetInput(string name, ConnectionType type)
         {
-            return (EntityInput)Inputs[0];
+            if (Inputs.Count == 0)
+                return null;
+            var input = (EntityInput)Inputs[0];
+            if (input.Name != name || input.Type != type)
+                return null;
+            return input;
         }
 
         public EntityOutput GetOutput(string name, ConnectionType type)
         {
-            return (EntityOutput)Outputs[0];
+            if (Outputs.Count == 0)
+                return null;
+            var output = (EntityOutput)Outputs[0];
+            if (output.Name != name || output.Type != type)
+                return null;
+            return output;
         }
 
         public void AddInput(EntityInput input)

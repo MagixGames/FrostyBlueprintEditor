@@ -11,6 +11,7 @@ using BlueprintEditorPlugin.Models.Entities.Networking;
 using BlueprintEditorPlugin.Models.Nodes;
 using BlueprintEditorPlugin.Models.Nodes.Ports;
 using BlueprintEditorPlugin.Models.Nodes.Utilities;
+using Frosty.Core;
 using FrostySdk.Ebx;
 using FrostySdk.IO;
 
@@ -115,7 +116,14 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             _loadedFromLayout = false;
 
             if (OriginalSource == null || OriginalTarget == null || Inputs.Count == 0 || Outputs.Count == 0)
+            {
+                App.Logger.LogError("WranglerNode.OnCreation: null refs — src={0}, tgt={1}, inputs={2}, outputs={3}",
+                    OriginalSource?.GetType().Name,
+                    OriginalTarget?.GetType().Name,
+                    Inputs.Count,
+                    Outputs.Count);
                 return;
+            }
 
             // Find the EBX-backed connection from OriginalSource to OriginalTarget
             IConnection existingConnection = null;
@@ -129,7 +137,11 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             }
 
             if (existingConnection == null)
+            {
+                App.Logger.LogError("WranglerNode.OnCreation: no connection found for {0} -> {1} (conn count={2})",
+                    OriginalSource, OriginalTarget, NodeWrangler.Connections.Count);
                 return;
+            }
 
             // Retarget it through the wrangler: OriginalSource -> wrangler.Inputs[0]
             existingConnection.Target = Inputs[0];
@@ -164,8 +176,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
             if (version >= FormatVersion)
             {
-                OriginalSource = ReadPortRef(reader);
-                OriginalTarget = ReadPortRef(reader);
+                OriginalSource = ReadPortRef(reader, PortDirection.Out);
+                OriginalTarget = ReadPortRef(reader, PortDirection.In);
                 _loadedFromLayout = true;
             }
 
@@ -209,7 +221,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             }
         }
 
-        private IPort ReadPortRef(LayoutReader reader)
+        private IPort ReadPortRef(LayoutReader reader, PortDirection expectedDirection)
         {
             if (!reader.ReadBoolean())
                 return null;
@@ -230,11 +242,15 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                     if (!entityNode.InternalGuid.Equals(guid))
                         continue;
 
-                    IPort port = entityNode.GetOutput(portName, portType);
+                    IPort port = expectedDirection == PortDirection.Out
+                        ? entityNode.GetOutput(portName, portType)
+                        : entityNode.GetInput(portName, portType);
+
                     if (port != null)
                         return port;
 
-                    return entityNode.GetInput(portName, portType);
+                    // Continue searching — multiple InterfaceNodes may share the same
+                    // InternalGuid but differ in port name/type
                 }
             }
             else if (nodeType == 1)
@@ -251,12 +267,11 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                     if (wranglerNode.NodeId != nodeId)
                         continue;
 
-                    foreach (IPort p in wranglerNode.Inputs)
-                    {
-                        if (p.Name == portName && p is EntityPort ep && ep.Type == portType)
-                            return p;
-                    }
-                    foreach (IPort p in wranglerNode.Outputs)
+                    var ports = expectedDirection == PortDirection.Out
+                        ? wranglerNode.Outputs
+                        : wranglerNode.Inputs;
+
+                    foreach (IPort p in ports)
                     {
                         if (p.Name == portName && p is EntityPort ep && ep.Type == portType)
                             return p;
