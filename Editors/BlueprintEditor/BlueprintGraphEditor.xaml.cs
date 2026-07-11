@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Connections;
+
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Extensions;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes;
@@ -1031,7 +1032,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                     {
                         if (selectedNode is EntityNode entityNode)
                         {
-                            FrostyClipboard.Current.SetData(entityNode.Object); // TODO: Work around, need to copy data
+                            FrostyClipboard.Current.SetData(entityNode.Object);
                             EntityNode newNode = EntityNode.GetNodeFromEntity(FrostyClipboard.Current.GetData(), NodeWrangler, true);
                             newNode.Location = new Point(selectedNode.Location.X + 15, selectedNode.Location.Y + 15);
                             NodeWrangler.AddVertex(newNode);

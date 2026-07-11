@@ -117,11 +117,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
             if (OriginalSource == null || OriginalTarget == null || Inputs.Count == 0 || Outputs.Count == 0)
             {
-                App.Logger.LogError("WranglerNode.OnCreation: null refs — src={0}, tgt={1}, inputs={2}, outputs={3}",
-                    OriginalSource?.GetType().Name,
-                    OriginalTarget?.GetType().Name,
-                    Inputs.Count,
-                    Outputs.Count);
                 return;
             }
 
@@ -138,8 +133,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
             if (existingConnection == null)
             {
-                App.Logger.LogError("WranglerNode.OnCreation: no connection found for {0} -> {1} (conn count={2})",
-                    OriginalSource, OriginalTarget, NodeWrangler.Connections.Count);
                 return;
             }
 
