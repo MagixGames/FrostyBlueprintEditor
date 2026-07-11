@@ -1382,6 +1382,43 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             }
         }
 
+        private void AddWranglerNode_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (((MenuItem)sender).DataContext is IConnection connection)
+            {
+                // Calculate midpoint between source and target for placement
+                Point sourceAnchor = connection.Source.Anchor;
+                Point targetAnchor = connection.Target.Anchor;
+                Point midpoint = new Point(
+                    (sourceAnchor.X + targetAnchor.X) / 2.0,
+                    (sourceAnchor.Y + targetAnchor.Y) / 2.0);
+
+                // Determine connection type from the existing connection
+                ConnectionType type = ConnectionType.Property;
+                if (connection is EntityConnection entityConn)
+                {
+                    type = entityConn.Type;
+                }
+
+                // Create the wrangler node
+                WranglerNode wrangler = new WranglerNode(type, NodeWrangler)
+                {
+                    Location = midpoint,
+                    OriginalSource = connection.Source,
+                    OriginalTarget = connection.Target
+                };
+
+                // Retarget the existing connection to go into the wrangler's input
+                connection.Target = wrangler.Inputs[0];
+
+                // Add the wrangler node to the graph
+                NodeWrangler.AddVertex(wrangler);
+
+                // Create a transient connection from the wrangler's output to the original target
+                NodeWrangler.AddConnection(new TransientConnection(wrangler.Outputs[0], wrangler.OriginalTarget, type));
+            }
+        }
+
         #endregion
     }
 }
