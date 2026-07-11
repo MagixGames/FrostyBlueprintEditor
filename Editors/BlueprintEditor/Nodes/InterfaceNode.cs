@@ -306,10 +306,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
             }
 
             real.Location = reader.ReadPoint();
-            
-            // TODO HACK: We create interface nodes before we read layouts. So in order to read transient data from them, we can't add new ones.
-            // Resulting in this hack of a method
-            return false;
+            return true;
         }
 
         public void Save(LayoutWriter writer)

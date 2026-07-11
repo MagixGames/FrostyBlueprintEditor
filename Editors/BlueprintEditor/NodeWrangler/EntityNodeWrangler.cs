@@ -51,25 +51,28 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.NodeWrangler
         /// <param name="vert"></param>
         public void AddVertexTransient(IVertex vert)
         {
+            App.Logger.LogError("AddVertexTransient: type={0}, wrangler hash={1}", vert?.GetType().Name, GetHashCode());
             switch (vert)
             {
                 case EntityNode entityNode when entityNode.Type == PointerRefType.Internal:
                 {
                     if (InternalNodeCache.ContainsKey(entityNode.InternalGuid))
                     {
-                        App.Logger.LogError("An item with the AssetClassGuid {0} has already been added!", entityNode.InternalGuid.ToString());
+                        App.Logger.LogError("AddVertexTransient: SKIP Internal EntityNode (duplicate guid {0})", entityNode.InternalGuid.ToString());
                         return;
                     }
                     InternalNodeCache.Add(entityNode.InternalGuid, entityNode);
+                    App.Logger.LogError("AddVertexTransient: ADDED Internal EntityNode, cache count={0}", InternalNodeCache.Count);
                 } break;
                 case EntityNode entityNode:
                 {
                     if (ExternalNodeCache.ContainsKey((entityNode.FileGuid, entityNode.ClassGuid)))
                     {
-                        App.Logger.LogError("Multiple imported items with the same guids detected!");
+                        App.Logger.LogError("AddVertexTransient: SKIP External EntityNode (duplicate guid)");
                         return;
                     }
                     ExternalNodeCache.Add((entityNode.FileGuid, entityNode.ClassGuid), entityNode);
+                    App.Logger.LogError("AddVertexTransient: ADDED External EntityNode, cache count={0}", ExternalNodeCache.Count);
                 } break;
                 case InterfaceNode interfaceNode:
                 {
@@ -142,6 +145,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.NodeWrangler
             // TODO: This is a work around to fix UI being on a different thread, causing crashes
             Application.Current.Dispatcher.Invoke(() =>
             {
+                App.Logger.LogError("AddVertexTransient: Dispatcher.Invoke adding to Vertices, wrangler hash={0}, count before={1}", GetHashCode(), Vertices.Count);
                 Vertices.Add(vert);
             });
             

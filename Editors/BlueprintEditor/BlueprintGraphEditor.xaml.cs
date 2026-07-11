@@ -84,7 +84,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         public virtual void Closed()
         {
             if (!EditorOptions.SaveOnExit) return;
-            
+
+            LayoutManager.NodeWrangler = NodeWrangler;
             EbxAssetEntry assetEntry = App.AssetManager.GetEbxEntry(((EntityNodeWrangler)NodeWrangler).Asset.FileGuid);
             LayoutManager.SaveLayout($"{assetEntry.Name}.lyt");
         }
@@ -152,8 +153,11 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             if (layoutManager != null)
             {
                 LayoutManager = layoutManager;
-                LayoutManager.NodeWrangler = NodeWrangler;
             }
+
+            LayoutManager.NodeWrangler = NodeWrangler;
+            App.Logger.LogError("LoadAsset: asset={0}, wrangler hash={1}, LM wrangler hash={2}",
+                assetEntry.Name, wrangler.GetHashCode(), LayoutManager.NodeWrangler?.GetHashCode());
 
             CheapMethod cheap = new CheapMethod(NodeWrangler);
             foreach (object assetObject in wrangler.Asset.Objects)
@@ -602,14 +606,23 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
             #endregion
 
-            if (!LayoutManager.LayoutExists($"{assetEntry.Name}.lyt"))
+            // Layout loading must run on the UI thread to ensure all vertex dispatches are complete
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                LayoutManager.SortLayout();
-            }
-            else
-            {
-                LayoutManager.LoadLayoutRelative($"{assetEntry.Name}.lyt");
-            }
+                App.Logger.LogError("LoadAsset: before Layout - this.NodeWrangler hash={0}, LM.NodeWrangler hash={1}, verts count={2}",
+                    NodeWrangler?.GetHashCode(),
+                    LayoutManager.NodeWrangler?.GetHashCode(),
+                    NodeWrangler?.Vertices.Count);
+
+                if (!LayoutManager.LayoutExists($"{assetEntry.Name}.lyt"))
+                {
+                    LayoutManager.SortLayout();
+                }
+                else
+                {
+                    LayoutManager.LoadLayoutRelative($"{assetEntry.Name}.lyt");
+                }
+            });
         }
 
         #region Static
@@ -734,16 +747,13 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             List<IVertex> oldSelection = new List<IVertex>(NodeWrangler.SelectedVertices);
             foreach (IVertex selectedNode in oldSelection)
             {
-                if (selectedNode is IRedirect redirect)
+                if (selectedNode is IRedirect redirect && 
+                    (redirect.SourceRedirect != null || redirect.TargetRedirect != null))
                 {
                     if (redirect.SourceRedirect != null)
-                    {
                         NodeWrangler.RemoveVertex(redirect.SourceRedirect);
-                    }
                     else
-                    {
                         NodeWrangler.RemoveVertex(redirect.TargetRedirect);
-                    }
                 }
                 
                 NodeWrangler.RemoveVertex(selectedNode);
@@ -944,6 +954,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
         private void SaveOrganizationButton_OnClick(object sender, RoutedEventArgs e)
         {
+            LayoutManager.NodeWrangler = NodeWrangler;
             EbxAssetEntry assetEntry = App.AssetManager.GetEbxEntry(((EntityNodeWrangler)NodeWrangler).Asset.FileGuid);
             if (LayoutManager.SaveLayout($"{assetEntry.Name}.lyt"))
             {
@@ -961,6 +972,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             if (!ofd.ShowDialog())
                 return;
 
+            LayoutManager.NodeWrangler = NodeWrangler;
             LayoutManager.LoadLayout(ofd.FileName);
         }
 
@@ -1041,6 +1053,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                 } break;
                 case Key.S when (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift:
                 {
+                    LayoutManager.NodeWrangler = NodeWrangler;
                     EbxAssetEntry assetEntry = App.AssetManager.GetEbxEntry(((EntityNodeWrangler)NodeWrangler).Asset.FileGuid);
                     LayoutManager.SaveLayout($"{assetEntry.Name}.lyt");
                 } break;

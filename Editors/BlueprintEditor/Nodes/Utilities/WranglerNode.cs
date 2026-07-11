@@ -10,74 +10,72 @@ using BlueprintEditorPlugin.Models.Connections;
 using BlueprintEditorPlugin.Models.Entities.Networking;
 using BlueprintEditorPlugin.Models.Nodes;
 using BlueprintEditorPlugin.Models.Nodes.Ports;
+using BlueprintEditorPlugin.Models.Nodes.Utilities;
 using FrostySdk.IO;
 
 namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 {
     /// <summary>
-    /// A simple passthrough node with 1 input and 1 output, used to reroute connections on the graph.
-    /// When placed on a wire, it splits the connection and allows the user to freely move the routing point.
+    /// A single draggable dot placed on a wire that acts as a routing point.
+    /// Wires pass through it visually. You cannot pull new wires from or to it.
+    /// Implements IRedirect so BaseNodeWrangler skips ClearConnections on deletion,
+    /// allowing OnDestruction to heal the wire.
     /// </summary>
-    public class WranglerNode : BaseNode, ITransient
+    public class WranglerNode : BaseNode, ITransient, IRedirect
     {
         public ConnectionType ConnectionType { get; set; }
 
-        /// <summary>
-        /// The original connection's source port before splitting, used for rewiring on destruction.
-        /// </summary>
+        /// <summary>The original connection's source port before splitting.</summary>
         public IPort OriginalSource { get; set; }
 
-        /// <summary>
-        /// The original connection's target port before splitting, used for rewiring on destruction.
-        /// </summary>
+        /// <summary>The original connection's target port before splitting.</summary>
         public IPort OriginalTarget { get; set; }
 
-        public override string Header
-        {
-            get => "Wrangler";
-        }
+        public override string Header => "Wrangler";
+
+        #region IRedirect (minimal — prevents ClearConnections from wiping the wire)
+
+        public PortDirection Direction { get; set; }
+        public IRedirect SourceRedirect { get; set; }
+        public IRedirect TargetRedirect { get; set; }
+        public IPort RedirectTarget { get; set; }
+
+        #endregion
 
         public WranglerNode(ConnectionType type, INodeWrangler wrangler) : base(wrangler)
         {
             ConnectionType = type;
-            Size = new Size(100, 24);
+            Size = new Size(16, 16);
 
             switch (type)
             {
                 case ConnectionType.Event:
-                {
                     Inputs.Add(new EventInput("In", this) { Realm = Realm.Any });
                     Outputs.Add(new EventOutput("Out", this) { Realm = Realm.Any });
-                } break;
+                    break;
                 case ConnectionType.Link:
-                {
                     Inputs.Add(new LinkInput("In", this) { Realm = Realm.Any });
                     Outputs.Add(new LinkOutput("Out", this) { Realm = Realm.Any });
-                } break;
+                    break;
                 case ConnectionType.Property:
-                {
                     Inputs.Add(new PropertyInput("In", this) { Realm = Realm.Any });
                     Outputs.Add(new PropertyOutput("Out", this) { Realm = Realm.Any });
-                } break;
+                    break;
             }
         }
 
-        public WranglerNode()
-        {
-        }
+        public WranglerNode(INodeWrangler wrangler) : base(wrangler) { }
+        public WranglerNode() { }
 
         /// <summary>
-        /// Retarget any connection going into our input back to the original target,
-        /// and remove the transient from our output to the original target.
-        /// This effectively "heals" the wire when the wrangler node is deleted.
+        /// Heals the wire when deleted: retargets the real connection back to the
+        /// original target, and removes the transient from our output.
         /// </summary>
         public override void OnDestruction()
         {
             if (OriginalSource == null || OriginalTarget == null)
                 return;
 
-            // Find the connection that was redirected to our input (source -> our input)
-            // and retarget it back to the original target
             IConnection targetConnection = null;
             foreach (IConnection connection in NodeWrangler.GetConnections(Inputs[0]))
             {
@@ -93,20 +91,15 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                 targetConnection.Target = OriginalTarget;
             }
 
-            // Remove the transient connection from our output to the original target
             List<IConnection> toRemove = new List<IConnection>();
             foreach (IConnection connection in NodeWrangler.GetConnections(Outputs[0]))
             {
                 if (connection.Source == Outputs[0])
-                {
                     toRemove.Add(connection);
-                }
             }
 
             foreach (IConnection connection in toRemove)
-            {
                 NodeWrangler.RemoveConnection(connection);
-            }
         }
 
         #region ITransient
@@ -115,25 +108,22 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
         {
             ConnectionType = (ConnectionType)reader.ReadInt();
             Location = reader.ReadPoint();
+            Size = new Size(16, 16);
 
-            // Recreate ports based on connection type
             switch (ConnectionType)
             {
                 case ConnectionType.Event:
-                {
                     Inputs.Add(new EventInput("In", this) { Realm = Realm.Any });
                     Outputs.Add(new EventOutput("Out", this) { Realm = Realm.Any });
-                } break;
+                    break;
                 case ConnectionType.Link:
-                {
                     Inputs.Add(new LinkInput("In", this) { Realm = Realm.Any });
                     Outputs.Add(new LinkOutput("Out", this) { Realm = Realm.Any });
-                } break;
+                    break;
                 case ConnectionType.Property:
-                {
                     Inputs.Add(new PropertyInput("In", this) { Realm = Realm.Any });
                     Outputs.Add(new PropertyOutput("Out", this) { Realm = Realm.Any });
-                } break;
+                    break;
             }
 
             return true;

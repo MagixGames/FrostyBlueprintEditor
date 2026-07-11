@@ -180,8 +180,11 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
             if (!File.Exists(path))
                 return false;
 
+            App.Logger.LogError($"LoadLayout: NodeWrangler hash={NodeWrangler?.GetHashCode()}, verts count={NodeWrangler?.Vertices.Count}");
+
             LayoutReader layoutReader = new LayoutReader(new FileStream(path, FileMode.Open));
-            if (layoutReader.ReadInt() != Version)
+            int fileVersion = layoutReader.ReadInt();
+            if (fileVersion != Version)
             {
                 MessageBoxResult result = FrostyMessageBox.Show(
                     "It appears the layout file associated with this is older then the current version. Would you like me to read it anyway?", 
@@ -197,6 +200,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
             // Read through all the nodes
             EntityNodeWrangler wrangler = (EntityNodeWrangler)NodeWrangler;
             int count = layoutReader.ReadInt();
+            App.Logger.LogError($"LoadLayout: reading {count} verts");
+            int applied = 0, skipped = 0;
             for (int i = 0; i < count; i++)
             {
                 if (layoutReader.ReadBoolean())
@@ -218,6 +223,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                     // SKIP!
                     if (node == null)
                     {
+                        skipped++;
                         layoutReader.ReadPoint();
                         layoutReader.ReadDouble();
                         layoutReader.ReadDouble();
@@ -253,6 +259,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                     double width = layoutReader.ReadDouble();
                     double height = layoutReader.ReadDouble();
                     node.Size = new Size(width, height);
+                    applied++;
 
                     int portCount = layoutReader.ReadInt();
                     
@@ -316,9 +323,13 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                     vertex.Size = new Size(width, height);
                 }
             }
-            
+
+            App.Logger.LogError($"LoadLayout: applied {applied} positions, skipped {skipped}");
+
             // Read through all trans
             count = layoutReader.ReadInt();
+            App.Logger.LogError($"LoadLayout: reading {count} transients");
+            int transLoaded = 0;
             for (int i = 0; i < count; i++)
             {
                 string key = layoutReader.ReadNullTerminatedString();
@@ -344,7 +355,12 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
 
                     if (transient.Load(layoutReader))
                     {
-                        NodeWrangler.AddVertex(transient);
+                        // InterfaceNodes are pre-created during asset population - don't re-add them
+                        if (!(transient is InterfaceNode))
+                        {
+                            NodeWrangler.AddVertex(transient);
+                        }
+                        transLoaded++;
                     }
                 }
                 catch (Exception e)
@@ -355,6 +371,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                     return false;
                 }
             }
+            
+            App.Logger.LogError($"LoadLayout: loaded {transLoaded} transients");
             
             layoutReader.Dispose();
 

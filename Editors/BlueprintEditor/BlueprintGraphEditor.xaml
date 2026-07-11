@@ -1271,159 +1271,57 @@
                 </nodes1:Node>
             </DataTemplate>
                         
+            <!-- Wrangler node: a tiny draggable dot on a wire. Connectors are present for Anchor
+                 calculation but invisible (Opacity=0) and non-interactive (IsHitTestVisible=False). -->
+            <ControlTemplate x:Key="WranglerConnectorThumb"
+                             TargetType="Control">
+                <Ellipse Width="1" Height="1"
+                         Fill="Transparent" />
+            </ControlTemplate>
+            
             <DataTemplate DataType="{x:Type utilities:WranglerNode}">
                 <nodes1:Node Input="{Binding Inputs}"
                              Output="{Binding Outputs}"
-                             Header="{Binding Header}"
-                             HeaderBrush="#3F3F3F">
+                             Header=""
+                             HeaderBrush="Transparent"
+                             Background="Transparent"
+                             BorderBrush="Transparent">
                     <nodes1:Node.Style>
                         <Style TargetType="{x:Type nodes1:Node}">
-                            <Setter Property="ContentBrush" Value="{StaticResource PropertyConnectionColor}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding ConnectionType}"
-                                             Value="{x:Static connections:ConnectionType.Event}">
-                                    <Setter Property="ContentBrush" Value="White" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding ConnectionType}"
-                                             Value="{x:Static connections:ConnectionType.Property}">
-                                    <Setter Property="ContentBrush"
-                                            Value="{StaticResource PropertyConnectionColor}" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding ConnectionType}"
-                                             Value="{x:Static connections:ConnectionType.Link}">
-                                    <Setter Property="ContentBrush"
-                                            Value="{StaticResource LinkConnectionColor}" />
-                                </DataTrigger>
-                            </Style.Triggers>
+                            <Setter Property="MinWidth" Value="0" />
+                            <Setter Property="MinHeight" Value="0" />
                         </Style>
                     </nodes1:Node.Style>
 
+                    <nodes1:Node.HeaderTemplate>
+                        <DataTemplate>
+                            <Ellipse Width="8" Height="8"
+                                     Fill="{StaticResource NodeSelectedColor}"
+                                     ToolTip="Wrangler Node" />
+                        </DataTemplate>
+                    </nodes1:Node.HeaderTemplate>
+
                     <nodes1:Node.InputConnectorTemplate>
                         <DataTemplate DataType="{x:Type ports:EntityInput}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <nodes1:NodeInput IsConnected="{Binding IsConnected}"
-                                                  Anchor="{Binding Anchor, Mode=OneWayToSource}"
-                                                  BorderBrush="{StaticResource NodeSelectedColor}"
-                                                  ConnectorTemplate="{StaticResource InputConnectorTemplate}">
-                                    <nodes1:NodeInput.HeaderTemplate>
-                                        <DataTemplate>
-                                            <TextBlock FontFamily="Consolas"
-                                                       Text="{Binding Name}"
-                                                       FontSize="10"
-                                                       Foreground="Black"
-                                                       HorizontalAlignment="Left"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,3,0"
-                                                       DataContext="{Binding DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=1,AncestorType=nodes1:NodeInput}}" />
-                                        </DataTemplate>
-                                    </nodes1:NodeInput.HeaderTemplate>
-                                </nodes1:NodeInput>
-
-                                <Grid Grid.Column="1" VerticalAlignment="Center"
-                                      HorizontalAlignment="Left"
-                                      Width="23"
-                                      Height="23">
-                                    <Grid.Style>
-                                        <Style TargetType="{x:Type Grid}">
-                                            <Setter Property="Background"
-                                                    Value="{StaticResource PropertyConnectionColor}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Type, Mode=OneTime}"
-                                                             Value="{x:Static connections:ConnectionType.Event}">
-                                                    <Setter Property="Background" Value="White" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Type, Mode=OneTime}"
-                                                             Value="{x:Static connections:ConnectionType.Property}">
-                                                    <Setter Property="Background"
-                                                            Value="{StaticResource PropertyConnectionColor}" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Type, Mode=OneTime}"
-                                                             Value="{x:Static connections:ConnectionType.Link}">
-                                                    <Setter Property="Background"
-                                                            Value="{StaticResource LinkConnectionColor}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Grid.Style>
-                                    <Ellipse Width="10" Height="10" Fill="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Grid>
+                            <nodes1:NodeInput IsConnected="{Binding IsConnected}"
+                                              Anchor="{Binding Anchor, Mode=OneWayToSource}"
+                                              IsHitTestVisible="False"
+                                              Opacity="0"
+                                              ConnectorTemplate="{StaticResource WranglerConnectorThumb}">
+                            </nodes1:NodeInput>
                         </DataTemplate>
                     </nodes1:Node.InputConnectorTemplate>
 
                     <nodes1:Node.OutputConnectorTemplate>
                         <DataTemplate DataType="{x:Type ports:EntityOutput}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <nodes1:NodeOutput Grid.Column="1" IsConnected="{Binding IsConnected}"
-                                                   Anchor="{Binding Anchor, Mode=OneWayToSource}"
-                                                   BorderBrush="{StaticResource NodeSelectedColor}"
-                                                   ConnectorTemplate="{StaticResource OutputConnectorTemplate}">
-                                    <nodes1:NodeOutput.HeaderTemplate>
-                                        <DataTemplate>
-                                            <TextBlock FontFamily="Consolas"
-                                                       Text="{Binding Name}"
-                                                       FontSize="10"
-                                                       Foreground="Black"
-                                                       HorizontalAlignment="Left"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,3,0"
-                                                       DataContext="{Binding DataContext, RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=1,AncestorType=nodes1:NodeOutput}}" />
-                                        </DataTemplate>
-                                    </nodes1:NodeOutput.HeaderTemplate>
-                                </nodes1:NodeOutput>
-
-                                <Grid Grid.Column="0" VerticalAlignment="Center"
-                                      HorizontalAlignment="Right"
-                                      Width="23"
-                                      Height="23">
-                                    <Grid.Style>
-                                        <Style TargetType="{x:Type Grid}">
-                                            <Setter Property="Background"
-                                                    Value="{StaticResource PropertyConnectionColor}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Type, Mode=OneTime}"
-                                                             Value="{x:Static connections:ConnectionType.Event}">
-                                                    <Setter Property="Background" Value="White" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Type, Mode=OneTime}"
-                                                             Value="{x:Static connections:ConnectionType.Property}">
-                                                    <Setter Property="Background"
-                                                            Value="{StaticResource PropertyConnectionColor}" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Type, Mode=OneTime}"
-                                                             Value="{x:Static connections:ConnectionType.Link}">
-                                                    <Setter Property="Background"
-                                                            Value="{StaticResource LinkConnectionColor}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Grid.Style>
-                                    <Ellipse Width="10" Height="10" Fill="#808080" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Grid>
+                            <nodes1:NodeOutput IsConnected="{Binding IsConnected}"
+                                               Anchor="{Binding Anchor, Mode=OneWayToSource}"
+                                               IsHitTestVisible="False"
+                                               Opacity="0"
+                                               ConnectorTemplate="{StaticResource WranglerConnectorThumb}">
+                            </nodes1:NodeOutput>
                         </DataTemplate>
                     </nodes1:Node.OutputConnectorTemplate>
-                                
-                    <nodes1:Node.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Delete" Click="DeleteNode_OnClick">
-                                <MenuItem.Icon>
-                                    <Image
-                                        Source="pack://application:,,,/FrostyCore;component/images/clear.png" />
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </ContextMenu>
-                    </nodes1:Node.ContextMenu>
                 </nodes1:Node>
             </DataTemplate>
         </ResourceDictionary>
