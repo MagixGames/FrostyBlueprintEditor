@@ -180,8 +180,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
             if (!File.Exists(path))
                 return false;
 
-            App.Logger.LogError($"LoadLayout: NodeWrangler hash={NodeWrangler?.GetHashCode()}, verts count={NodeWrangler?.Vertices.Count}");
-
             LayoutReader layoutReader = new LayoutReader(new FileStream(path, FileMode.Open));
             int fileVersion = layoutReader.ReadInt();
             if (fileVersion != Version)
@@ -200,7 +198,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
             // Read through all the nodes
             EntityNodeWrangler wrangler = (EntityNodeWrangler)NodeWrangler;
             int count = layoutReader.ReadInt();
-            App.Logger.LogError($"LoadLayout: reading {count} verts");
             int applied = 0, skipped = 0;
             for (int i = 0; i < count; i++)
             {
@@ -324,11 +321,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                 }
             }
 
-            App.Logger.LogError($"LoadLayout: applied {applied} positions, skipped {skipped}");
-
             // Read through all trans
             count = layoutReader.ReadInt();
-            App.Logger.LogError($"LoadLayout: reading {count} transients");
             int transLoaded = 0;
             for (int i = 0; i < count; i++)
             {
@@ -371,8 +365,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                     return false;
                 }
             }
-            
-            App.Logger.LogError($"LoadLayout: loaded {transLoaded} transients");
             
             layoutReader.Dispose();
 

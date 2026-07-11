@@ -156,8 +156,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             }
 
             LayoutManager.NodeWrangler = NodeWrangler;
-            App.Logger.LogError("LoadAsset: asset={0}, wrangler hash={1}, LM wrangler hash={2}",
-                assetEntry.Name, wrangler.GetHashCode(), LayoutManager.NodeWrangler?.GetHashCode());
 
             CheapMethod cheap = new CheapMethod(NodeWrangler);
             foreach (object assetObject in wrangler.Asset.Objects)
@@ -609,11 +607,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             // Layout loading must run on the UI thread to ensure all vertex dispatches are complete
             Application.Current.Dispatcher.Invoke(() =>
             {
-                App.Logger.LogError("LoadAsset: before Layout - this.NodeWrangler hash={0}, LM.NodeWrangler hash={1}, verts count={2}",
-                    NodeWrangler?.GetHashCode(),
-                    LayoutManager.NodeWrangler?.GetHashCode(),
-                    NodeWrangler?.Vertices.Count);
-
                 if (!LayoutManager.LayoutExists($"{assetEntry.Name}.lyt"))
                 {
                     LayoutManager.SortLayout();
