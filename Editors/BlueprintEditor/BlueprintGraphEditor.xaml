@@ -189,7 +189,8 @@
                                 <wireview:CurvedWire Source="{Binding SourceAnchor}" Target="{Binding TargetAnchor}"
                                                      CurvePoint1="{Binding CurvePoint1}"
                                                      CurvePoint2="{Binding CurvePoint2}"
-                                                     StrokeThickness="{x:Static options:EditorOptions.WireThickness}">
+                                                     StrokeThickness="{x:Static options:EditorOptions.WireThickness}"
+                                                     ShowDirectionalBubbles="False">
                                     <wireview:CurvedWire.Style>
                                         <Style TargetType="{x:Type wireview:CurvedWire}">
                                             <Style.Triggers>
