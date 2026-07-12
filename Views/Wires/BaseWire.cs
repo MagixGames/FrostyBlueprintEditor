@@ -91,6 +91,7 @@ namespace BlueprintEditorPlugin.Views.Wires
         private bool _bubbleGeometryRegistered;
         private Geometry _lastBubbleGeometry;
         private Brush _lastBubbleBrush;
+        private ConnectionsBubbleOverlay _parentOverlay;
 
         protected BaseWire()
         {
@@ -122,6 +123,7 @@ namespace BlueprintEditorPlugin.Views.Wires
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+            _parentOverlay = FindParentOverlay();
             ShowDirectionalBubbles = EditorOptions.AnimatedDirectionalBubbles;
             EditorOptions.Updated += OnEditorOptionsUpdated;
 
@@ -133,6 +135,7 @@ namespace BlueprintEditorPlugin.Views.Wires
         {
             EditorOptions.Updated -= OnEditorOptionsUpdated;
             StopBubbleAnimation();
+            _parentOverlay = null;
         }
 
         private void OnEditorOptionsUpdated()
@@ -140,16 +143,47 @@ namespace BlueprintEditorPlugin.Views.Wires
             ShowDirectionalBubbles = EditorOptions.AnimatedDirectionalBubbles;
         }
 
+        private ConnectionsBubbleOverlay FindParentOverlay()
+        {
+            DependencyObject current = this;
+            while (current != null)
+            {
+                if (current is ConnectionsBubbleOverlay overlay)
+                    return overlay;
+
+                var parent = VisualTreeHelper.GetParent(current);
+                if (parent is System.Windows.Controls.Panel panel)
+                {
+                    foreach (UIElement child in panel.Children)
+                    {
+                        if (child is ConnectionsBubbleOverlay sibling)
+                            return sibling;
+                    }
+                }
+                current = parent;
+            }
+            return null;
+        }
+
+        private bool _bubbleAnimationStarted;
+
         private void StartBubbleAnimation()
         {
-            StopBubbleAnimation();
+            if (_bubbleAnimationStarted)
+                return;
+
             BubbleAnimationManager.AddReference();
+            _bubbleAnimationStarted = true;
         }
 
         private void StopBubbleAnimation()
         {
+            if (!_bubbleAnimationStarted)
+                return;
+
             RemoveBubbleGeometry();
             BubbleAnimationManager.RemoveReference();
+            _bubbleAnimationStarted = false;
         }
 
         private void RemoveBubbleGeometry()
@@ -157,7 +191,7 @@ namespace BlueprintEditorPlugin.Views.Wires
             if (!_bubbleGeometryRegistered)
                 return;
 
-            BubbleOverlayManager.RemoveGeometry(this);
+            _parentOverlay?.Manager.RemoveGeometry(this);
             _bubbleGeometryRegistered = false;
             _lastBubbleGeometry = null;
             _lastBubbleBrush = null;
@@ -213,16 +247,14 @@ namespace BlueprintEditorPlugin.Views.Wires
 
             if (!_bubbleGeometryRegistered || geometryReferenceChanged || brushChanged)
             {
-                BubbleOverlayManager.UpdateGeometry(this, geometry, Stroke);
+                _parentOverlay?.Manager.UpdateGeometry(this, geometry, Stroke);
                 _bubbleGeometryRegistered = true;
                 _lastBubbleGeometry = geometry;
                 _lastBubbleBrush = Stroke;
             }
             else if (geometryWasDirty)
             {
-                // The geometry instance is reused but its contents were rebuilt;
-                // force the shared overlay to repaint.
-                BubbleOverlayManager.InvalidateOverlay();
+                _parentOverlay?.InvalidateVisual();
             }
         }
 

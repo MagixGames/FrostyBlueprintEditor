@@ -7,10 +7,11 @@ namespace BlueprintEditorPlugin.Views.Wires
 {
     /// <summary>
     /// Collects per-wire geometries from <see cref="BaseWire"/> instances and merges them into
-    /// one <see cref="GeometryGroup"/> per brush so <see cref="ConnectionsBubbleOverlay"/> can
+    /// one <see cref="GeometryGroup"/> per brush so a <see cref="ConnectionsBubbleOverlay"/> can
     /// draw all bubbles in a constant number of draw calls.
+    /// Each overlay instance owns its own manager so multiple blueprint windows stay isolated.
     /// </summary>
-    public static class BubbleOverlayManager
+    public class BubbleOverlayManager
     {
         private class Registration
         {
@@ -19,46 +20,24 @@ namespace BlueprintEditorPlugin.Views.Wires
             public GeometryGroup Group;
         }
 
-        private static readonly Dictionary<BaseWire, Registration> _registrations = new Dictionary<BaseWire, Registration>();
-        private static readonly Dictionary<Brush, GeometryGroup> _groups = new Dictionary<Brush, GeometryGroup>();
-        private static ConnectionsBubbleOverlay _overlay;
+        private readonly Dictionary<BaseWire, Registration> _registrations = new Dictionary<BaseWire, Registration>();
+        private readonly Dictionary<Brush, GeometryGroup> _groups = new Dictionary<Brush, GeometryGroup>();
+        private readonly Action _invalidateAction;
+
+        public BubbleOverlayManager(Action invalidateAction)
+        {
+            _invalidateAction = invalidateAction;
+        }
 
         /// <summary>
         /// Gets the merged geometry groups keyed by the brush used to stroke them.
         /// </summary>
-        public static IEnumerable<KeyValuePair<Brush, GeometryGroup>> Groups => _groups;
+        public IEnumerable<KeyValuePair<Brush, GeometryGroup>> Groups => _groups;
 
         /// <summary>
-        /// Sets the active overlay. Called when a <see cref="ConnectionsBubbleOverlay"/> is loaded.
+        /// Registers or updates the geometry a wire contributes to this overlay's geometry.
         /// </summary>
-        public static void SetOverlay(ConnectionsBubbleOverlay overlay)
-        {
-            _overlay = overlay;
-            _overlay?.InvalidateVisual();
-        }
-
-        /// <summary>
-        /// Releases the active overlay only if it matches the given instance.
-        /// Called when a <see cref="ConnectionsBubbleOverlay"/> is unloaded.
-        /// </summary>
-        public static void ReleaseOverlay(ConnectionsBubbleOverlay overlay)
-        {
-            if (_overlay == overlay)
-            {
-                _overlay = null;
-            }
-        }
-
-        /// <summary>
-        /// Forces the overlay to repaint. Use when a registered geometry's contents changed
-        /// but its instance and brush stayed the same.
-        /// </summary>
-        public static void InvalidateOverlay() => _overlay?.InvalidateVisual();
-
-        /// <summary>
-        /// Registers or updates the geometry a wire contributes to the shared overlay.
-        /// </summary>
-        public static void UpdateGeometry(BaseWire wire, Geometry geometry, Brush brush)
+        public void UpdateGeometry(BaseWire wire, Geometry geometry, Brush brush)
         {
             if (wire == null || geometry == null || brush == null)
                 return;
@@ -90,13 +69,13 @@ namespace BlueprintEditorPlugin.Views.Wires
                 Group = group
             };
 
-            _overlay?.InvalidateVisual();
+            _invalidateAction?.Invoke();
         }
 
         /// <summary>
-        /// Removes a wire's geometry from the shared overlay.
+        /// Removes a wire's geometry from this overlay's geometry.
         /// </summary>
-        public static void RemoveGeometry(BaseWire wire)
+        public void RemoveGeometry(BaseWire wire)
         {
             if (wire == null || !_registrations.TryGetValue(wire, out Registration existing))
                 return;
@@ -108,7 +87,7 @@ namespace BlueprintEditorPlugin.Views.Wires
             }
 
             _registrations.Remove(wire);
-            _overlay?.InvalidateVisual();
+            _invalidateAction?.Invoke();
         }
     }
 }

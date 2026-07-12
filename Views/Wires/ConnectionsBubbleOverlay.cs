@@ -9,6 +9,8 @@ namespace BlueprintEditorPlugin.Views.Wires
     /// <summary>
     /// Renders directional bubbles for all visible wires in a few shared draw calls
     /// instead of one draw call per wire.
+    /// Each instance owns its own <see cref="BubbleOverlayManager"/> so multiple
+    /// blueprint windows stay isolated.
     /// </summary>
     public class ConnectionsBubbleOverlay : FrameworkElement
     {
@@ -25,28 +27,41 @@ namespace BlueprintEditorPlugin.Views.Wires
             set => SetValue(BubbleOffsetProperty, value);
         }
 
+        /// <summary>
+        /// The per-overlay geometry manager that wires in the same editor register with.
+        /// </summary>
+        public BubbleOverlayManager Manager { get; private set; }
+
         private readonly Dictionary<Brush, Pen> _bubblePens = new Dictionary<Brush, Pen>();
         private DashStyle _dashStyle;
 
         public ConnectionsBubbleOverlay()
         {
+            Manager = new BubbleOverlayManager(InvalidateVisual);
+
             IsHitTestVisible = false;
             ClipToBounds = false;
 
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
+            IsVisibleChanged += OnIsVisibleChanged;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            BubbleOverlayManager.SetOverlay(this);
             BindingOperations.SetBinding(this, BubbleOffsetProperty, BubbleAnimationManager.CreateOffsetBinding());
+            InvalidateVisual();
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
             BindingOperations.ClearBinding(this, BubbleOffsetProperty);
-            BubbleOverlayManager.ReleaseOverlay(this);
+        }
+
+        private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if ((bool)e.NewValue)
+                InvalidateVisual();
         }
 
         protected override void OnRender(DrawingContext drawingContext)
@@ -67,7 +82,7 @@ namespace BlueprintEditorPlugin.Views.Wires
                 _dashStyle.Offset = BubbleOffset;
             }
 
-            foreach (KeyValuePair<Brush, GeometryGroup> group in BubbleOverlayManager.Groups)
+            foreach (KeyValuePair<Brush, GeometryGroup> group in Manager.Groups)
             {
                 Brush brush = group.Key;
                 GeometryGroup geometry = group.Value;
