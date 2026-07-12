@@ -127,6 +127,22 @@
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
 
+                            <wires:ConnectionsBubbleOverlay x:Name="PART_ConnectionsBubbleOverlay">
+                                <wires:ConnectionsBubbleOverlay.Style>
+                                    <Style TargetType="wires:ConnectionsBubbleOverlay">
+                                        <Setter Property="Panel.ZIndex"
+                                                Value="-1" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DisplayConnectionsOnTop, RelativeSource={RelativeSource AncestorType=local:NodifyEditor}}"
+                                                         Value="True">
+                                                <Setter Property="Panel.ZIndex"
+                                                        Value="0" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </wires:ConnectionsBubbleOverlay.Style>
+                            </wires:ConnectionsBubbleOverlay>
+
                             <ContentPresenter ContentSource="PendingConnection" />
 
                             <Rectangle Style="{TemplateBinding SelectionRectangleStyle}"
