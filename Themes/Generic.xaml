@@ -20,8 +20,7 @@
     xmlns:buttons="clr-namespace:BlueprintEditorPlugin.Views.Buttons"
     xmlns:treeViews="clr-namespace:BlueprintEditorPlugin.Views.TreeViews"
     xmlns:helpers="clr-namespace:BlueprintEditorPlugin.Views.Helpers"
-    xmlns:converters="clr-namespace:Frosty.Core.Converters;assembly=FrostyCore"
-    xmlns:minimap="clr-namespace:BlueprintEditorPlugin.Views.Nodes">
+    xmlns:converters="clr-namespace:Frosty.Core.Converters;assembly=FrostyCore">
 
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/FrostyControls;component/Themes/Generic.xaml"/>
@@ -30,8 +29,6 @@
 
     <BooleanToVisibilityConverter x:Key="BoolToVis" />
     <converters:StringToBitmapSourceConverter x:Key="StringToBitmapSourceConverter"/>
-    <helpers:MinimapCoordConverter x:Key="MinimapCoordConverter" />
-    <helpers:MinimapViewportCoordConverter x:Key="MinimapViewportCoordConverter" />
     
     <SolidColorBrush x:Key="EventConnectionColor"
                      Color="#F8F8F8" 

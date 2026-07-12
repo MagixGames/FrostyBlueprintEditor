@@ -10,7 +10,6 @@
         <ResourceDictionary Source="NodeOutput.xaml" />
         <ResourceDictionary Source="Connection.xaml" />
         <ResourceDictionary Source="PendingConnection.xaml" />
-        <ResourceDictionary Source="Minimap.xaml" />
 
         <!--CORE-->
         <ResourceDictionary Source="ItemContainer.xaml" />

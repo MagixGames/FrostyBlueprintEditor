@@ -23,6 +23,7 @@
              xmlns:nodes2="clr-namespace:BlueprintEditorPlugin.Models.Nodes"
              xmlns:buttons="clr-namespace:BlueprintEditorPlugin.Views.Buttons"
              xmlns:treeViews="clr-namespace:BlueprintEditorPlugin.Views.TreeViews"
+             xmlns:nodify="clr-namespace:Nodify;assembly=Nodify"
              mc:Ignorable="d"
              d:DesignHeight="702" d:DesignWidth="1520">
     
@@ -1381,35 +1382,15 @@
                         </editor:NodifyEditor.ContextMenu>
                     </editor:NodifyEditor>
 
-                    <!--Minimap Overlay-->
-                    <Border x:Name="MinimapBorder"
-                            Width="250"
-                            Height="180"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Bottom"
-                            Margin="0,0,10,10"
-                            Background="#1A1A1A"
-                            BorderBrush="#505050"
-                            BorderThickness="2"
-                            MouseLeftButtonDown="MinimapViewport_OnMouseLeftButtonDown"
-                            MouseLeftButtonUp="MinimapViewport_OnMouseLeftButtonUp"
-                            MouseMove="MinimapViewport_OnMouseMove"
-                            MouseWheel="MinimapBorder_OnMouseWheel">
-                        <Grid x:Name="MinimapGrid">
-                            <Canvas x:Name="MinimapCanvas" />
-
-                            <!--Viewport Rectangle (draggable)-->
-                            <Rectangle x:Name="MinimapViewport"
-                                       Fill="Transparent"
-                                       Stroke="White"
-                                       StrokeThickness="1.5"
-                                       StrokeDashArray="2,2"
-                                       Cursor="SizeAll"
-                                       MouseLeftButtonDown="MinimapViewport_OnMouseLeftButtonDown"
-                                       MouseLeftButtonUp="MinimapViewport_OnMouseLeftButtonUp"
-                                       MouseMove="MinimapViewport_OnMouseMove" />
-                        </Grid>
-                    </Border>
+                    <nodify:Minimap ItemsSource="{Binding ItemsSource, ElementName=Editor}"
+                                   ViewportLocation="{Binding ViewportLocation, ElementName=Editor}"
+                                   ViewportSize="{Binding ViewportSize, ElementName=Editor}"
+                                   Zoom="OnMinimapZoom"
+                                   Width="250"
+                                   Height="180"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Bottom"
+                                   Margin="0,0,10,10" />
                 </Grid>
             
                 <!--Toolbox(for adding and removing nodes)-->

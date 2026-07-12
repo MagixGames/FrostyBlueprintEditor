@@ -30,6 +30,7 @@ using BlueprintEditorPlugin.Models.Nodes.Ports;
 using BlueprintEditorPlugin.Models.Nodes.Utilities;
 using BlueprintEditorPlugin.Models.Status;
 using BlueprintEditorPlugin.Options;
+using Nodify.Events;
 using BlueprintEditorPlugin.Views.Editor;
 using BlueprintEditorPlugin.Views.Helpers;
 using BlueprintEditorPlugin.Windows;
@@ -93,15 +94,13 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         }
 
         #endregion
-
+        
         public BlueprintGraphEditor()
         {
             NodeWrangler = new EntityNodeWrangler();
 
             InitializeComponent();
             NodePropertyGrid.NodeWrangler = NodeWrangler;
-
-            Editor.ViewportUpdated += Editor_OnViewportUpdated;
 
             LayoutManager = new EntityLayoutManager(NodeWrangler);
 
@@ -1164,151 +1163,14 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             }
         }
 
-        private void Minimap_OnZoom(object sender, Views.Events.ZoomEventArgs e)
+        #endregion
+
+        #region Minimap
+
+        private void OnMinimapZoom(object sender, ZoomEventArgs e)
         {
             Editor.ZoomAtPosition(e.Zoom, e.Location);
-            UpdateMinimap();
         }
-
-        private void Editor_OnViewportUpdated(object sender, RoutedEventArgs e)
-        {
-            UpdateMinimap();
-        }
-
-        private void UpdateMinimap()
-        {
-            if (Editor == null || MinimapCanvas == null)
-                return;
-
-            Rect bounds = Editor.ItemsExtent;
-            if (bounds.Width <= 0 || bounds.Height <= 0)
-            {
-                bounds = new Rect(0, 0, 2000, 1500);
-            }
-
-            double padding = 100;
-            bounds.Inflate(padding, padding);
-
-            double scaleX = 250.0 / bounds.Width;
-            double scaleY = 180.0 / bounds.Height;
-
-            // Clear and redraw nodes
-            MinimapCanvas.Children.Clear();
-
-            // Draw nodes
-            foreach (IVertex vertex in NodeWrangler.Vertices)
-            {
-                Border nodeBorder = new Border
-                {
-                    Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(102, 102, 102)),
-                    BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(153, 153, 153)),
-                    BorderThickness = new Thickness(1),
-                    Width = Math.Max(4, vertex.Size.Width * scaleX),
-                    Height = Math.Max(3, vertex.Size.Height * scaleY)
-                };
-
-                double left = (vertex.Location.X - bounds.Left) * scaleX;
-                double top = (vertex.Location.Y - bounds.Top) * scaleY;
-
-                Canvas.SetLeft(nodeBorder, Math.Max(0, left));
-                Canvas.SetTop(nodeBorder, Math.Max(0, top));
-                MinimapCanvas.Children.Add(nodeBorder);
-            }
-
-            // Update viewport rectangle
-            if (MinimapViewport != null)
-            {
-                Canvas.SetLeft(MinimapViewport, (Editor.ViewportLocation.X - bounds.Left) * scaleX);
-                Canvas.SetTop(MinimapViewport, (Editor.ViewportLocation.Y - bounds.Top) * scaleY);
-                MinimapViewport.Width = Math.Max(10, Editor.ViewportSize.Width * scaleX);
-                MinimapViewport.Height = Math.Max(8, Editor.ViewportSize.Height * scaleY);
-            }
-        }
-
-        #region Minimap interaction
-
-        private bool _isDraggingMinimap;
-        private Point _minimapDragStart;
-        private Point _viewportStart;
-
-        private Rect GetGraphBounds()
-        {
-            Rect bounds = Editor.ItemsExtent;
-            if (bounds.Width <= 0 || bounds.Height <= 0)
-            {
-                bounds = new Rect(0, 0, 2000, 1500);
-            }
-            double padding = 100;
-            bounds.Inflate(padding, padding);
-            return bounds;
-        }
-
-        private void MinimapViewport_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (Editor == null || MinimapBorder == null)
-                return;
-
-            _isDraggingMinimap = true;
-            _minimapDragStart = e.GetPosition(MinimapBorder);
-            _viewportStart = Editor.ViewportLocation;
-            MinimapViewport.CaptureMouse();
-            e.Handled = true;
-        }
-
-        private void MinimapViewport_OnMouseMove(object sender, MouseEventArgs e)
-        {
-            if (!_isDraggingMinimap || Editor == null || MinimapBorder == null)
-                return;
-
-            Point current = e.GetPosition(MinimapBorder);
-            Vector delta = current - _minimapDragStart;
-
-            Rect bounds = GetGraphBounds();
-            double scaleX = 250.0 / bounds.Width;
-            double scaleY = 180.0 / bounds.Height;
-
-            // Convert minimap delta to graph space
-            double graphDeltaX = delta.X / scaleX;
-            double graphDeltaY = delta.Y / scaleY;
-
-            Editor.ViewportLocation = new Point(_viewportStart.X - graphDeltaX, _viewportStart.Y - graphDeltaY);
-            e.Handled = true;
-        }
-
-        private void MinimapViewport_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if (_isDraggingMinimap)
-            {
-                _isDraggingMinimap = false;
-                MinimapViewport?.ReleaseMouseCapture();
-                e.Handled = true;
-            }
-        }
-
-        private void MinimapBorder_OnMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            if (Editor == null || MinimapBorder == null)
-                return;
-
-            Point location = e.GetPosition(MinimapBorder);
-            double zoom = Math.Pow(2.0, e.Delta / 3.0 / Mouse.MouseWheelDeltaForOneLine);
-
-            // Convert minimap location to editor coordinates
-            Rect bounds = GetGraphBounds();
-            double scaleX = bounds.Width / 250.0;
-            double scaleY = bounds.Height / 180.0;
-
-            // The minimap location is in minimap space, convert to graph space
-            Point graphLocation = new Point(
-                bounds.Left + location.X * scaleX,
-                bounds.Top + location.Y * scaleY
-            );
-
-            Editor.ZoomAtPosition(zoom, graphLocation);
-            e.Handled = true;
-        }
-
-        #endregion
 
         #endregion
 
