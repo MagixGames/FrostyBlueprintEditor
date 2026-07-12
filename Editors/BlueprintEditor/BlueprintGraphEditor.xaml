@@ -1289,7 +1289,28 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="{x:Type nodes1:Node}">
-                                        <Grid Width="30" Height="18">
+                                        <Grid Width="30" Height="18"
+                                              RenderTransformOrigin="0.5,0.5">
+                                            <Grid.Resources>
+                                                <ScaleTransform x:Key="NormalScale"
+                                                                ScaleX="1" />
+                                                <ScaleTransform x:Key="FlippedScale"
+                                                                ScaleX="-1" />
+                                            </Grid.Resources>
+                                            <Grid.Style>
+                                                <Style TargetType="Grid">
+                                                    <Setter Property="RenderTransform"
+                                                            Value="{StaticResource NormalScale}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsFlipped}"
+                                                                     Value="True">
+                                                            <Setter Property="RenderTransform"
+                                                                    Value="{StaticResource FlippedScale}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Grid.Style>
+
                                             <!-- Visual: dot + right-pointing arrow -->
                                             <Ellipse Width="16" Height="16"
                                                      HorizontalAlignment="Left" VerticalAlignment="Center"

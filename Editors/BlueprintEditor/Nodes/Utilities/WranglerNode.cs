@@ -41,16 +41,50 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
         #endregion
 
         private bool _loadedFromLayout;
+        private bool _isFlipped;
+
+        public bool IsFlipped
+        {
+            get => _isFlipped;
+            set
+            {
+                if (_isFlipped != value)
+                {
+                    _isFlipped = value;
+                    NotifyPropertyChanged(nameof(IsFlipped));
+                }
+            }
+        }
+
+        public void UpdateDirection()
+        {
+            if (OriginalSource?.Node is IVertex sourceNode)
+            {
+                IsFlipped = sourceNode.Location.X > Location.X;
+            }
+        }
 
         public WranglerNode(ConnectionType type, INodeWrangler wrangler) : base(wrangler)
         {
             ConnectionType = type;
-            Size = new Size(38, 18);
+            Size = new Size(30, 18);
             CreatePorts();
+            PropertyChanged += OnPropertyChanged;
         }
 
-        public WranglerNode(INodeWrangler wrangler) : base(wrangler) { }
+        public WranglerNode(INodeWrangler wrangler) : base(wrangler)
+        {
+            PropertyChanged += OnPropertyChanged;
+        }
         public WranglerNode() { }
+
+        private void OnPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Location))
+            {
+                UpdateDirection();
+            }
+        }
 
         private void CreatePorts()
         {
@@ -110,37 +144,35 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
         public override void OnCreation()
         {
-            if (!_loadedFromLayout)
-                return;
-
-            _loadedFromLayout = false;
-
-            if (OriginalSource == null || OriginalTarget == null || Inputs.Count == 0 || Outputs.Count == 0)
+            if (_loadedFromLayout)
             {
-                return;
-            }
+                _loadedFromLayout = false;
 
-            // Find the EBX-backed connection from OriginalSource to OriginalTarget
-            IConnection existingConnection = null;
-            foreach (IConnection conn in NodeWrangler.Connections)
-            {
-                if (conn.Source == OriginalSource && conn.Target == OriginalTarget)
+                if (OriginalSource != null && OriginalTarget != null && Inputs.Count > 0 && Outputs.Count > 0)
                 {
-                    existingConnection = conn;
-                    break;
+                    // Find the EBX-backed connection from OriginalSource to OriginalTarget
+                    IConnection existingConnection = null;
+                    foreach (IConnection conn in NodeWrangler.Connections)
+                    {
+                        if (conn.Source == OriginalSource && conn.Target == OriginalTarget)
+                        {
+                            existingConnection = conn;
+                            break;
+                        }
+                    }
+
+                    if (existingConnection != null)
+                    {
+                        // Retarget it through the wrangler: OriginalSource -> wrangler.Inputs[0]
+                        existingConnection.Target = Inputs[0];
+
+                        // Add transient connection: wrangler.Outputs[0] -> OriginalTarget
+                        NodeWrangler.AddConnection(new TransientConnection(Outputs[0], OriginalTarget, ConnectionType));
+                    }
                 }
             }
 
-            if (existingConnection == null)
-            {
-                return;
-            }
-
-            // Retarget it through the wrangler: OriginalSource -> wrangler.Inputs[0]
-            existingConnection.Target = Inputs[0];
-
-            // Add transient connection: wrangler.Outputs[0] -> OriginalTarget
-            NodeWrangler.AddConnection(new TransientConnection(Outputs[0], OriginalTarget, ConnectionType));
+            UpdateDirection();
         }
 
         #region ITransient
@@ -154,7 +186,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             {
                 ConnectionType = (ConnectionType)first;
                 Location = reader.ReadPoint();
-                Size = new Size(38, 18);
+                Size = new Size(30, 18);
                 CreatePorts();
                 return true;
             }
@@ -164,7 +196,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             NodeId = reader.ReadGuid();
             ConnectionType = (ConnectionType)reader.ReadInt();
             Location = reader.ReadPoint();
-            Size = new Size(38, 18);
+            Size = new Size(30, 18);
             CreatePorts();
 
             if (version >= FormatVersion)
