@@ -1273,43 +1273,65 @@
                 </nodes1:Node>
             </DataTemplate>
                         
-            <!-- Wrangler node: a tiny draggable dot on a wire. Connectors are present for Anchor
-                 calculation but invisible (Opacity=0) and non-interactive (IsHitTestVisible=False). -->
-            <ControlTemplate x:Key="WranglerConnectorThumb"
-                             TargetType="Control">
-                <Ellipse Width="1" Height="1"
-                         Fill="Transparent" />
-            </ControlTemplate>
+            <!-- Wrangler node: a single point on the wire with an arrow pointing to the output.
+                 Both port anchors overlap at the center so wires meet at exactly one point.
+                 Ports are invisible (Opacity=0) and non-interactive (IsHitTestVisible=False). -->
             
             <DataTemplate DataType="{x:Type utilities:WranglerNode}">
                 <nodes1:Node Input="{Binding Inputs}"
                              Output="{Binding Outputs}"
-                             Header=""
-                             HeaderBrush="Transparent"
                              Background="Transparent"
                              BorderBrush="Transparent">
                     <nodes1:Node.Style>
                         <Style TargetType="{x:Type nodes1:Node}">
                             <Setter Property="MinWidth" Value="0" />
                             <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type nodes1:Node}">
+                                        <Grid Width="30" Height="18">
+                                            <!-- Visual: dot + right-pointing arrow -->
+                                            <Ellipse Width="16" Height="16"
+                                                     HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                     Margin="2,0,0,0"
+                                                     Fill="{StaticResource NodeSelectedColor}"
+                                                     ToolTip="Wrangler Node" />
+                                            <Path Data="M 21,0 L 29,6 L 21,12 Z"
+                                                  HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                  Fill="{StaticResource NodeSelectedColor}" />
+
+                                            <!-- Input and output anchors at the same center point -->
+                                            <ItemsControl ItemsSource="{TemplateBinding Input}"
+                                                          ItemTemplate="{TemplateBinding InputConnectorTemplate}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          Focusable="False" />
+                                            <ItemsControl ItemsSource="{TemplateBinding Output}"
+                                                          ItemTemplate="{TemplateBinding OutputConnectorTemplate}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          Focusable="False" />
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </nodes1:Node.Style>
-
-                    <nodes1:Node.HeaderTemplate>
-                        <DataTemplate>
-                            <Ellipse Width="8" Height="8"
-                                     Fill="{StaticResource NodeSelectedColor}"
-                                     ToolTip="Wrangler Node" />
-                        </DataTemplate>
-                    </nodes1:Node.HeaderTemplate>
 
                     <nodes1:Node.InputConnectorTemplate>
                         <DataTemplate DataType="{x:Type ports:EntityInput}">
                             <nodes1:NodeInput IsConnected="{Binding IsConnected}"
                                               Anchor="{Binding Anchor, Mode=OneWayToSource}"
                                               IsHitTestVisible="False"
-                                              Opacity="0"
-                                              ConnectorTemplate="{StaticResource WranglerConnectorThumb}">
+                                              Opacity="0">
+                                <nodes1:NodeInput.Template>
+                                    <ControlTemplate TargetType="nodes1:NodeInput">
+                                        <Control x:Name="PART_Connector"
+                                                 Width="1" Height="1"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center" />
+                                    </ControlTemplate>
+                                </nodes1:NodeInput.Template>
                             </nodes1:NodeInput>
                         </DataTemplate>
                     </nodes1:Node.InputConnectorTemplate>
@@ -1319,8 +1341,15 @@
                             <nodes1:NodeOutput IsConnected="{Binding IsConnected}"
                                                Anchor="{Binding Anchor, Mode=OneWayToSource}"
                                                IsHitTestVisible="False"
-                                               Opacity="0"
-                                               ConnectorTemplate="{StaticResource WranglerConnectorThumb}">
+                                               Opacity="0">
+                                <nodes1:NodeOutput.Template>
+                                    <ControlTemplate TargetType="nodes1:NodeOutput">
+                                        <Control x:Name="PART_Connector"
+                                                 Width="1" Height="1"
+                                                 HorizontalAlignment="Center"
+                                                 VerticalAlignment="Center" />
+                                    </ControlTemplate>
+                                </nodes1:NodeOutput.Template>
                             </nodes1:NodeOutput>
                         </DataTemplate>
                     </nodes1:Node.OutputConnectorTemplate>

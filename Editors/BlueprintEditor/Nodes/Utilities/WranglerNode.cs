@@ -45,7 +45,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
         public WranglerNode(ConnectionType type, INodeWrangler wrangler) : base(wrangler)
         {
             ConnectionType = type;
-            Size = new Size(16, 16);
+            Size = new Size(38, 18);
             CreatePorts();
         }
 
@@ -154,7 +154,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             {
                 ConnectionType = (ConnectionType)first;
                 Location = reader.ReadPoint();
-                Size = new Size(16, 16);
+                Size = new Size(38, 18);
                 CreatePorts();
                 return true;
             }
@@ -164,7 +164,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             NodeId = reader.ReadGuid();
             ConnectionType = (ConnectionType)reader.ReadInt();
             Location = reader.ReadPoint();
-            Size = new Size(16, 16);
+            Size = new Size(38, 18);
             CreatePorts();
 
             if (version >= FormatVersion)
