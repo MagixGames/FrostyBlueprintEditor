@@ -1382,15 +1382,48 @@
                         </editor:NodifyEditor.ContextMenu>
                     </editor:NodifyEditor>
 
-                    <nodify:Minimap ItemsSource="{Binding ItemsSource, ElementName=Editor}"
-                                   ViewportLocation="{Binding ViewportLocation, ElementName=Editor}"
-                                   ViewportSize="{Binding ViewportSize, ElementName=Editor}"
-                                   Zoom="OnMinimapZoom"
-                                   Width="250"
-                                   Height="180"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Bottom"
-                                   Margin="0,0,10,10" />
+                    <Grid x:Name="MinimapContainer"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Bottom"
+                          Margin="0,0,10,10"
+                          Width="250"
+                          Height="180"
+                          MinWidth="120"
+                          MinHeight="80">
+                        <nodify:Minimap x:Name="MinimapControl"
+                                        ItemsSource="{Binding ItemsSource, ElementName=Editor}"
+                                        ViewportLocation="{Binding ViewportLocation, ElementName=Editor}"
+                                        ViewportSize="{Binding ViewportSize, ElementName=Editor}"
+                                        ResizeToViewport="True"
+                                        Zoom="OnMinimapZoom">
+                            <nodify:Minimap.ItemContainerStyle>
+                                <Style TargetType="nodify:MinimapItem">
+                                    <Setter Property="Location" Value="{Binding Location, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Setter Property="Width" Value="{Binding Size.Width}" />
+                                    <Setter Property="Height" Value="{Binding Size.Height}" />
+                                </Style>
+                            </nodify:Minimap.ItemContainerStyle>
+                        </nodify:Minimap>
+
+                        <Thumb x:Name="MinimapResizeThumb"
+                               Width="14"
+                               Height="14"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Top"
+                               Cursor="SizeNESW"
+                               DragDelta="MinimapResizeThumb_OnDragDelta"
+                               Background="Transparent">
+                            <Thumb.Template>
+                                <ControlTemplate TargetType="Thumb">
+                                    <Path Data="M0,0 L10,0 L0,10 Z"
+                                          Fill="White"
+                                          Opacity="0.7"
+                                          Stretch="Uniform"
+                                          Margin="2"/>
+                                </ControlTemplate>
+                            </Thumb.Template>
+                        </Thumb>
+                    </Grid>
                 </Grid>
             
                 <!--Toolbox(for adding and removing nodes)-->

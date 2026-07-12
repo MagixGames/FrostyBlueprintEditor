@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Connections;
@@ -1170,6 +1171,23 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         private void OnMinimapZoom(object sender, ZoomEventArgs e)
         {
             Editor.ZoomAtPosition(e.Zoom, e.Location);
+        }
+
+        private void MinimapResizeThumb_OnDragDelta(object sender, DragDeltaEventArgs e)
+        {
+            // Project the drag vector onto the diagonal so the minimap only sizes diagonally.
+            // With the grip at the top-left and the container anchored to the bottom-right,
+            // dragging up-left enlarges and dragging down-right shrinks.
+            double diagonalDelta = (e.HorizontalChange + e.VerticalChange) / 2.0;
+
+            double newWidth = MinimapContainer.ActualWidth - diagonalDelta;
+            double newHeight = MinimapContainer.ActualHeight - diagonalDelta;
+
+            newWidth = Math.Max(newWidth, MinimapContainer.MinWidth);
+            newHeight = Math.Max(newHeight, MinimapContainer.MinHeight);
+
+            MinimapContainer.Width = newWidth;
+            MinimapContainer.Height = newHeight;
         }
 
         #endregion

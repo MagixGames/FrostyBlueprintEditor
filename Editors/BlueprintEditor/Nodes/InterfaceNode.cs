@@ -29,6 +29,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
     {
         private string _header;
         private Point _location;
+        private Size _size;
         private bool _isSelected;
 
         public string Header
@@ -67,7 +68,15 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
             }
         }
 
-        public Size Size { get; set; }
+        public Size Size
+        {
+            get => _size;
+            set
+            {
+                _size = value;
+                NotifyPropertyChanged(nameof(Size));
+            }
+        }
 
         public bool IsSelected
         {

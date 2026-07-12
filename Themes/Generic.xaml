@@ -25,6 +25,7 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/FrostyControls;component/Themes/Generic.xaml"/>
         <ResourceDictionary Source="/BlueprintEditorPlugin;component/Views/Themes/Styles/Controls.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/Nodify;component/Themes/Styles/Controls.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <BooleanToVisibilityConverter x:Key="BoolToVis" />

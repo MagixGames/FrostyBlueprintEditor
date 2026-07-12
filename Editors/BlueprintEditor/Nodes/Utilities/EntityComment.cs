@@ -48,7 +48,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
         {
             Header = "Header";
             HeaderColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3E7F4B"));
-            Size = new System.Windows.Size(8, 8);
+            CommentSize = new System.Windows.Size(8, 8);
             Object = new EditCommentArgs(this);
         }
 
