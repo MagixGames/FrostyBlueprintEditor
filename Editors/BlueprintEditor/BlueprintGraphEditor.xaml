@@ -1355,7 +1355,7 @@
                                          PendingConnectionTemplate="{StaticResource PendingConnectionTemplate}"
                                          KeyUp="Editor_OnKeyUp"
                                          MouseUp="Editor_OnMouseUp">
-                        
+
                         <editor:NodifyEditor.ContextMenu>
                             <ContextMenu x:Name="GraphContextMenu">
                                 <MenuItem Header="Add Node"
@@ -1380,6 +1380,27 @@
                             </ContextMenu>
                         </editor:NodifyEditor.ContextMenu>
                     </editor:NodifyEditor>
+
+                    <!--Minimap Overlay-->
+                    <Border Width="250"
+                            Height="180"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,10,10"
+                            Background="#1A1A1A"
+                            BorderBrush="#505050"
+                            BorderThickness="2">
+                        <Grid x:Name="MinimapGrid">
+                            <Canvas x:Name="MinimapCanvas" />
+
+                            <!--Viewport Rectangle-->
+                            <Rectangle x:Name="MinimapViewport"
+                                       Fill="Transparent"
+                                       Stroke="White"
+                                       StrokeThickness="1.5"
+                                       StrokeDashArray="2,2" />
+                        </Grid>
+                    </Border>
                 </Grid>
             
                 <!--Toolbox(for adding and removing nodes)-->

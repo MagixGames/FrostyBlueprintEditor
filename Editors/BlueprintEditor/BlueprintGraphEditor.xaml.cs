@@ -31,6 +31,7 @@ using BlueprintEditorPlugin.Models.Nodes.Utilities;
 using BlueprintEditorPlugin.Models.Status;
 using BlueprintEditorPlugin.Options;
 using BlueprintEditorPlugin.Views.Editor;
+using BlueprintEditorPlugin.Views.Helpers;
 using BlueprintEditorPlugin.Windows;
 using Frosty.Core;
 using Frosty.Core.Controls;
@@ -96,10 +97,12 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         public BlueprintGraphEditor()
         {
             NodeWrangler = new EntityNodeWrangler();
-            
+
             InitializeComponent();
             NodePropertyGrid.NodeWrangler = NodeWrangler;
-            
+
+            Editor.ViewportUpdated += Editor_OnViewportUpdated;
+
             LayoutManager = new EntityLayoutManager(NodeWrangler);
 
             foreach (Type extensionType in ExtensionsManager.BlueprintMenuItemExtensions)
@@ -1158,6 +1161,67 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             
                     NodeWrangler.AddVertex(vertex);
                 }
+            }
+        }
+
+        private void Minimap_OnZoom(object sender, Views.Events.ZoomEventArgs e)
+        {
+            Editor.ZoomAtPosition(e.Zoom, e.Location);
+            UpdateMinimap();
+        }
+
+        private void Editor_OnViewportUpdated(object sender, RoutedEventArgs e)
+        {
+            UpdateMinimap();
+        }
+
+        private void UpdateMinimap()
+        {
+            if (Editor == null || MinimapCanvas == null)
+                return;
+
+            Rect bounds = Editor.ItemsExtent;
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                bounds = new Rect(0, 0, 2000, 1500);
+            }
+
+            double padding = 100;
+            bounds.Inflate(padding, padding);
+
+            double scaleX = 250.0 / bounds.Width;
+            double scaleY = 180.0 / bounds.Height;
+
+            // Clear and redraw nodes
+            MinimapCanvas.Children.Clear();
+
+            // Draw nodes
+            foreach (IVertex vertex in NodeWrangler.Vertices)
+            {
+                Border nodeBorder = new Border
+                {
+                    Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(102, 102, 102)),
+                    BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(153, 153, 153)),
+                    BorderThickness = new Thickness(1),
+                    Width = Math.Max(4, vertex.Size.Width * scaleX),
+                    Height = Math.Max(3, vertex.Size.Height * scaleY)
+                };
+
+                double left = (vertex.Location.X - bounds.Left) * scaleX;
+                double top = (vertex.Location.Y - bounds.Top) * scaleY;
+
+                Canvas.SetLeft(nodeBorder, Math.Max(0, left));
+                Canvas.SetTop(nodeBorder, Math.Max(0, top));
+                MinimapCanvas.Children.Add(nodeBorder);
+            }
+
+            // Update viewport rectangle
+            if (MinimapViewport != null)
+            {
+                Canvas.SetLeft(MinimapViewport, (Editor.ViewportLocation.X - bounds.Left) * scaleX);
+                Canvas.SetTop(MinimapViewport, (Editor.ViewportLocation.Y - bounds.Top) * scaleY);
+                MinimapViewport.Width = Math.Max(10, Editor.ViewportSize.Width * scaleX);
+                MinimapViewport.Height = Math.Max(8, Editor.ViewportSize.Height * scaleY);
             }
         }
 
