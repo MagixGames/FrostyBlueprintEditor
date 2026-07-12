@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
@@ -628,6 +629,7 @@ namespace BlueprintEditorPlugin.Views.Editor
 
         private IDraggingStrategy _draggingStrategy;
         private DispatcherTimer _autoPanningTimer;
+        private ConnectionsBubbleOverlay _bubbleOverlay;
 
         /// <summary>
         /// Gets a list of <see cref="ItemContainer"/>s that are selected.
@@ -695,9 +697,44 @@ namespace BlueprintEditorPlugin.Views.Editor
 
             ItemsHost = GetTemplateChild(ElementItemsHost) as Panel ?? throw new InvalidOperationException("PART_ItemsHost is missing or is not of type Panel.");
 
+            InitializeBubbleOverlay();
+
             OnDisableAutoPanningChanged(DisableAutoPanning);
 
             State.Enter(null);
+        }
+
+        private void InitializeBubbleOverlay()
+        {
+            if (_bubbleOverlay != null)
+            {
+                var oldParent = VisualTreeHelper.GetParent(_bubbleOverlay) as Panel;
+                oldParent?.Children.Remove(_bubbleOverlay);
+                _bubbleOverlay = null;
+            }
+
+            var connectionsHost = GetTemplateChild("PART_ConnectionsHost") as UIElement;
+            if (connectionsHost == null)
+                return;
+
+            if (!(VisualTreeHelper.GetParent(connectionsHost) is Canvas canvas))
+                return;
+
+            _bubbleOverlay = new ConnectionsBubbleOverlay();
+
+            int index = canvas.Children.IndexOf(connectionsHost) + 1;
+            canvas.Children.Insert(index, _bubbleOverlay);
+
+            _bubbleOverlay.SetBinding(Panel.ZIndexProperty, new Binding("(Panel.ZIndex)")
+            {
+                Source = connectionsHost,
+                Mode = BindingMode.OneWay
+            });
+
+            // The overlay lives in the transformed Canvas and draws geometries in graph space.
+            // ClipToBounds=false lets it render outside its small bounds.
+            _bubbleOverlay.Width = 1;
+            _bubbleOverlay.Height = 1;
         }
 
         /// <inheritdoc />

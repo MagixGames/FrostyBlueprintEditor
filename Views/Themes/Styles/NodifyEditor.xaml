@@ -100,7 +100,8 @@
                                                 IsItemsHost="True"
                                                 Extent="{Binding ItemsExtent, Mode=OneWayToSource, RelativeSource={RelativeSource TemplatedParent}}" />
 
-                            <ItemsControl ItemsSource="{TemplateBinding Connections}"
+                            <ItemsControl x:Name="PART_ConnectionsHost"
+                                          ItemsSource="{TemplateBinding Connections}"
                                           ItemTemplate="{TemplateBinding ConnectionTemplate}"
                                           IsTabStop="False">
                                 <ItemsControl.CacheMode>

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using BlueprintEditorPlugin.Options;
 
@@ -18,19 +17,11 @@ namespace BlueprintEditorPlugin.Views.Wires
 
         public static readonly DependencyProperty ShowDirectionalBubblesProperty = DependencyProperty.Register(
             nameof(ShowDirectionalBubbles), typeof(bool), typeof(BaseWire),
-            new FrameworkPropertyMetadata(false, OnShowDirectionalBubblesChanged));
-
-        public static readonly DependencyProperty BubbleSpacingProperty = DependencyProperty.Register(
-            nameof(BubbleSpacing), typeof(double), typeof(BaseWire),
-            new FrameworkPropertyMetadata(24.0d, OnBubbleAppearanceChanged));
+            new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender, OnShowDirectionalBubblesChanged));
 
         public static readonly DependencyProperty BubbleSizeProperty = DependencyProperty.Register(
             nameof(BubbleSize), typeof(double), typeof(BaseWire),
-            new FrameworkPropertyMetadata(6.0d, OnBubbleAppearanceChanged));
-
-        public static readonly DependencyProperty BubbleAnimationDurationProperty = DependencyProperty.Register(
-            nameof(BubbleAnimationDuration), typeof(double), typeof(BaseWire),
-            new FrameworkPropertyMetadata(1.2d, OnBubbleAnimationDurationChanged));
+            new FrameworkPropertyMetadata(BubbleAnimationManager.BubbleSize, OnBubbleAppearanceChanged));
 
         /// <summary>
         /// Gets or sets the start point of this wire.
@@ -60,30 +51,12 @@ namespace BlueprintEditorPlugin.Views.Wires
         }
 
         /// <summary>
-        /// Gets or sets the distance between directional bubbles in pixels.
-        /// </summary>
-        public double BubbleSpacing
-        {
-            get => (double)GetValue(BubbleSpacingProperty);
-            set => SetValue(BubbleSpacingProperty, value);
-        }
-
-        /// <summary>
         /// Gets or sets the diameter of each directional bubble in pixels.
         /// </summary>
         public double BubbleSize
         {
             get => (double)GetValue(BubbleSizeProperty);
             set => SetValue(BubbleSizeProperty, value);
-        }
-
-        /// <summary>
-        /// Gets or sets the duration in seconds for a bubble to travel one <see cref="BubbleSpacing"/>.
-        /// </summary>
-        public double BubbleAnimationDuration
-        {
-            get => (double)GetValue(BubbleAnimationDurationProperty);
-            set => SetValue(BubbleAnimationDurationProperty, value);
         }
 
         private readonly StreamGeometry _geometry = new StreamGeometry
@@ -115,8 +88,9 @@ namespace BlueprintEditorPlugin.Views.Wires
             _geometryDirty = false;
         }
 
-        private Pen _bubblePen;
-        private DashStyle _bubbleDashStyle;
+        private bool _bubbleGeometryRegistered;
+        private Geometry _lastBubbleGeometry;
+        private Brush _lastBubbleBrush;
 
         protected BaseWire()
         {
@@ -141,17 +115,9 @@ namespace BlueprintEditorPlugin.Views.Wires
         private static void OnBubbleAppearanceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var wire = (BaseWire)d;
-            wire._bubblePen = null;
-            wire._bubbleDashStyle = null;
-            if (wire.ShowDirectionalBubbles)
-                wire.StartBubbleAnimation();
-        }
-
-        private static void OnBubbleAnimationDurationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var wire = (BaseWire)d;
-            if (wire.ShowDirectionalBubbles)
-                wire.StartBubbleAnimation();
+            wire._bubbleGeometryRegistered = false;
+            wire._lastBubbleGeometry = null;
+            wire._lastBubbleBrush = null;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -177,25 +143,24 @@ namespace BlueprintEditorPlugin.Views.Wires
         private void StartBubbleAnimation()
         {
             StopBubbleAnimation();
-
-            if (BubbleSpacing <= 0 || BubbleAnimationDuration <= 0)
-                return;
-
-            var animation = new DoubleAnimation
-            {
-                From = 0,
-                To = -BubbleSpacing,
-                Duration = TimeSpan.FromSeconds(BubbleAnimationDuration),
-                RepeatBehavior = RepeatBehavior.Forever
-            };
-
-            BeginAnimation(StrokeDashOffsetProperty, animation);
+            BubbleAnimationManager.AddReference();
         }
 
         private void StopBubbleAnimation()
         {
-            BeginAnimation(StrokeDashOffsetProperty, null);
-            StrokeDashOffset = 0;
+            RemoveBubbleGeometry();
+            BubbleAnimationManager.RemoveReference();
+        }
+
+        private void RemoveBubbleGeometry()
+        {
+            if (!_bubbleGeometryRegistered)
+                return;
+
+            BubbleOverlayManager.RemoveGeometry(this);
+            _bubbleGeometryRegistered = false;
+            _lastBubbleGeometry = null;
+            _lastBubbleBrush = null;
         }
 
         /// <summary>
@@ -229,27 +194,36 @@ namespace BlueprintEditorPlugin.Views.Wires
         {
             base.OnRender(drawingContext);
 
-            if (!ShowDirectionalBubbles || BubbleSize <= 0 || BubbleSpacing <= 0 || Stroke == null)
+            if (!ShowDirectionalBubbles || BubbleSize <= 0 || Stroke == null)
+            {
+                RemoveBubbleGeometry();
                 return;
-
-            if (_bubblePen == null)
-            {
-                _bubbleDashStyle = new DashStyle(new DoubleCollection { 0, BubbleSpacing }, StrokeDashOffset);
-                _bubblePen = new Pen(Stroke, BubbleSize)
-                {
-                    DashStyle = _bubbleDashStyle,
-                    DashCap = PenLineCap.Round,
-                    LineJoin = PenLineJoin.Round,
-                    StartLineCap = PenLineCap.Round,
-                    EndLineCap = PenLineCap.Round
-                };
-            }
-            else
-            {
-                _bubbleDashStyle.Offset = StrokeDashOffset;
             }
 
-            drawingContext.DrawGeometry(null, _bubblePen, DefiningGeometry);
+            bool geometryWasDirty = HasGeometryChanged();
+            Geometry geometry = DefiningGeometry;
+            if (geometry == null)
+            {
+                RemoveBubbleGeometry();
+                return;
+            }
+
+            bool brushChanged = !ReferenceEquals(Stroke, _lastBubbleBrush);
+            bool geometryReferenceChanged = !ReferenceEquals(geometry, _lastBubbleGeometry);
+
+            if (!_bubbleGeometryRegistered || geometryReferenceChanged || brushChanged)
+            {
+                BubbleOverlayManager.UpdateGeometry(this, geometry, Stroke);
+                _bubbleGeometryRegistered = true;
+                _lastBubbleGeometry = geometry;
+                _lastBubbleBrush = Stroke;
+            }
+            else if (geometryWasDirty)
+            {
+                // The geometry instance is reused but its contents were rebuilt;
+                // force the shared overlay to repaint.
+                BubbleOverlayManager.InvalidateOverlay();
+            }
         }
 
         protected abstract void DrawWire(StreamGeometryContext context);
