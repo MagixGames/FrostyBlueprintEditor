@@ -1225,6 +1225,91 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             }
         }
 
+        #region Minimap interaction
+
+        private bool _isDraggingMinimap;
+        private Point _minimapDragStart;
+        private Point _viewportStart;
+
+        private Rect GetGraphBounds()
+        {
+            Rect bounds = Editor.ItemsExtent;
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                bounds = new Rect(0, 0, 2000, 1500);
+            }
+            double padding = 100;
+            bounds.Inflate(padding, padding);
+            return bounds;
+        }
+
+        private void MinimapViewport_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (Editor == null || MinimapBorder == null)
+                return;
+
+            _isDraggingMinimap = true;
+            _minimapDragStart = e.GetPosition(MinimapBorder);
+            _viewportStart = Editor.ViewportLocation;
+            MinimapViewport.CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void MinimapViewport_OnMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_isDraggingMinimap || Editor == null || MinimapBorder == null)
+                return;
+
+            Point current = e.GetPosition(MinimapBorder);
+            Vector delta = current - _minimapDragStart;
+
+            Rect bounds = GetGraphBounds();
+            double scaleX = 250.0 / bounds.Width;
+            double scaleY = 180.0 / bounds.Height;
+
+            // Convert minimap delta to graph space
+            double graphDeltaX = delta.X / scaleX;
+            double graphDeltaY = delta.Y / scaleY;
+
+            Editor.ViewportLocation = new Point(_viewportStart.X - graphDeltaX, _viewportStart.Y - graphDeltaY);
+            e.Handled = true;
+        }
+
+        private void MinimapViewport_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_isDraggingMinimap)
+            {
+                _isDraggingMinimap = false;
+                MinimapViewport?.ReleaseMouseCapture();
+                e.Handled = true;
+            }
+        }
+
+        private void MinimapBorder_OnMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (Editor == null || MinimapBorder == null)
+                return;
+
+            Point location = e.GetPosition(MinimapBorder);
+            double zoom = Math.Pow(2.0, e.Delta / 3.0 / Mouse.MouseWheelDeltaForOneLine);
+
+            // Convert minimap location to editor coordinates
+            Rect bounds = GetGraphBounds();
+            double scaleX = bounds.Width / 250.0;
+            double scaleY = bounds.Height / 180.0;
+
+            // The minimap location is in minimap space, convert to graph space
+            Point graphLocation = new Point(
+                bounds.Left + location.X * scaleX,
+                bounds.Top + location.Y * scaleY
+            );
+
+            Editor.ZoomAtPosition(zoom, graphLocation);
+            e.Handled = true;
+        }
+
+        #endregion
+
         #endregion
 
         #region Node filtering
