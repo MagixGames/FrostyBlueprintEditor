@@ -12,6 +12,19 @@ namespace BlueprintEditorPlugin.Views.Wires
     /// </summary>
     public class Wire : BaseWire
     {
+        private ConnectionStyle _lastWireStyle;
+
+        protected override bool HasGeometryChanged()
+        {
+            return base.HasGeometryChanged() || EditorOptions.WireStyle != _lastWireStyle;
+        }
+
+        protected override void UpdateGeometryState()
+        {
+            base.UpdateGeometryState();
+            _lastWireStyle = EditorOptions.WireStyle;
+        }
+
         protected override void DrawWire(StreamGeometryContext context)
         {
             switch (EditorOptions.WireStyle)
