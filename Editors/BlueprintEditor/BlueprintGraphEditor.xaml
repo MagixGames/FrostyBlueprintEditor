@@ -38,6 +38,8 @@
                           x:Key="ConnectionTemplate">
                 <Canvas>
                     <wireview:Wire Source="{Binding Source.Anchor}" Target="{Binding Target.Anchor}"
+                                   SourceExitRight="{Binding SourceExitRight}"
+                                   TargetEnterRight="{Binding TargetEnterRight}"
                                    StrokeThickness="{x:Static options:EditorOptions.WireThickness}"
                                    RenderOptions.CachingHint="Cache"
                                    RenderOptions.CacheInvalidationThresholdMaximum="4"

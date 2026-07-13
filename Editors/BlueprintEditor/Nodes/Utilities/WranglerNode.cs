@@ -23,9 +23,27 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
         public ConnectionType ConnectionType { get; set; }
 
-        public IPort OriginalSource { get; set; }
+        private IPort _originalSource;
+        public IPort OriginalSource
+        {
+            get => _originalSource;
+            set
+            {
+                _originalSource = value;
+                UpdateDirection();
+            }
+        }
 
-        public IPort OriginalTarget { get; set; }
+        private IPort _originalTarget;
+        public IPort OriginalTarget
+        {
+            get => _originalTarget;
+            set
+            {
+                _originalTarget = value;
+                UpdateDirection();
+            }
+        }
 
         public Guid NodeId { get; set; } = Guid.NewGuid();
 
@@ -58,10 +76,20 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
         public void UpdateDirection()
         {
-            if (OriginalSource?.Node is IVertex sourceNode)
-            {
-                IsFlipped = sourceNode.Location.X > Location.X;
-            }
+            IVertex sourceNode = OriginalSource?.Node as IVertex;
+            IVertex targetNode = OriginalTarget?.Node as IVertex;
+            if (sourceNode == null || targetNode == null)
+                return;
+
+            double sourceOutputX = sourceNode is WranglerNode
+                ? sourceNode.Location.X + sourceNode.Size.Width / 2.0
+                : sourceNode.Location.X + sourceNode.Size.Width;
+
+            double targetInputX = targetNode is WranglerNode
+                ? targetNode.Location.X + targetNode.Size.Width / 2.0
+                : targetNode.Location.X;
+
+            IsFlipped = sourceOutputX > targetInputX;
         }
 
         public WranglerNode(ConnectionType type, INodeWrangler wrangler) : base(wrangler)
@@ -83,6 +111,21 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             if (e.PropertyName == nameof(Location))
             {
                 UpdateDirection();
+                UpdateDownstreamDirections();
+            }
+        }
+
+        private void UpdateDownstreamDirections()
+        {
+            if (Outputs.Count == 0 || NodeWrangler == null)
+                return;
+
+            foreach (IConnection conn in NodeWrangler.GetConnections(Outputs[0]))
+            {
+                if (conn.Source == Outputs[0] && conn.Target?.Node is WranglerNode downstream)
+                {
+                    downstream.UpdateDirection();
+                }
             }
         }
 

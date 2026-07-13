@@ -23,6 +23,14 @@ namespace BlueprintEditorPlugin.Views.Wires
             nameof(BubbleSize), typeof(double), typeof(BaseWire),
             new FrameworkPropertyMetadata(BubbleAnimationManager.BubbleSize, OnBubbleAppearanceChanged));
 
+        public static readonly DependencyProperty SourceExitRightProperty = DependencyProperty.Register(
+            nameof(SourceExitRight), typeof(bool), typeof(BaseWire),
+            new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public static readonly DependencyProperty TargetEnterRightProperty = DependencyProperty.Register(
+            nameof(TargetEnterRight), typeof(bool), typeof(BaseWire),
+            new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
         /// <summary>
         /// Gets or sets the start point of this wire.
         /// </summary>
@@ -57,6 +65,18 @@ namespace BlueprintEditorPlugin.Views.Wires
         {
             get => (double)GetValue(BubbleSizeProperty);
             set => SetValue(BubbleSizeProperty, value);
+        }
+
+        public bool SourceExitRight
+        {
+            get => (bool)GetValue(SourceExitRightProperty);
+            set => SetValue(SourceExitRightProperty, value);
+        }
+
+        public bool TargetEnterRight
+        {
+            get => (bool)GetValue(TargetEnterRightProperty);
+            set => SetValue(TargetEnterRightProperty, value);
         }
 
         private readonly StreamGeometry _geometry = new StreamGeometry
