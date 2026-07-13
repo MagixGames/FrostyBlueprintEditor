@@ -42,6 +42,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
     /// Point - Location
     /// Double - SizeX
     /// Double - SizeY
+    /// bool - IsFlatted // (Version >= 1007)
     ///
     /// int - InputsCount
     ///
@@ -61,7 +62,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
     /// </summary>
     public class EntityLayoutManager : BaseLayoutManager
     {
-        public override int Version => 1006;
+        public override int Version => 1007;
+        public const int MinCompatibleVersion = 1006;
 
         public virtual bool IsValid(EbxAssetEntry assetEntry)
         {
@@ -111,6 +113,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                         layoutWriter.Write(vertex.Location);
                         layoutWriter.Write(vertex.Size.Width);
                         layoutWriter.Write(vertex.Size.Height);
+                        layoutWriter.Write(node.IsFlatted);
 
                         layoutWriter.Write(node.Inputs.Count);
                         foreach (IPort input in node.Inputs)
@@ -183,7 +186,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
 
             LayoutReader layoutReader = new LayoutReader(new FileStream(path, FileMode.Open));
             int fileVersion = layoutReader.ReadInt();
-            if (fileVersion != Version)
+            if (fileVersion < MinCompatibleVersion || fileVersion > Version)
             {
                 MessageBoxResult result = FrostyMessageBox.Show(
                     "It appears the layout file associated with this is older then the current version. Would you like me to read it anyway?", 
@@ -225,6 +228,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                         layoutReader.ReadPoint();
                         layoutReader.ReadDouble();
                         layoutReader.ReadDouble();
+                        if (fileVersion >= 1007)
+                            layoutReader.ReadBoolean();
                         int portcount = layoutReader.ReadInt();
                         
                         // Read inputs
@@ -257,6 +262,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                     double width = layoutReader.ReadDouble();
                     double height = layoutReader.ReadDouble();
                     node.Size = new Size(width, height);
+                    if (fileVersion >= 1007)
+                        node.IsFlatted = layoutReader.ReadBoolean();
                     applied++;
 
                     int portCount = layoutReader.ReadInt();
