@@ -127,7 +127,9 @@
                                 </ItemsControl.ItemsPanel>
                             </ItemsControl>
 
-                            <wires:ConnectionsBubbleOverlay x:Name="PART_ConnectionsBubbleOverlay">
+                            <wires:ConnectionsBubbleOverlay x:Name="PART_ConnectionsBubbleOverlay"
+                                                             Width="1"
+                                                             Height="1">
                                 <wires:ConnectionsBubbleOverlay.Style>
                                     <Style TargetType="wires:ConnectionsBubbleOverlay">
                                         <Setter Property="Panel.ZIndex"

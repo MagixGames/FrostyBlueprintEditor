@@ -97,6 +97,7 @@ namespace BlueprintEditorPlugin.Views.Wires
         {
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
+            IsVisibleChanged += OnIsVisibleChanged;
         }
 
         private static void OnGeometryInvalidatingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -128,7 +129,20 @@ namespace BlueprintEditorPlugin.Views.Wires
             EditorOptions.Updated += OnEditorOptionsUpdated;
 
             if (ShowDirectionalBubbles)
+            {
                 StartBubbleAnimation();
+                RegisterBubbleGeometry();
+                InvalidateVisual();
+            }
+        }
+
+        private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if ((bool)e.NewValue && ShowDirectionalBubbles && _bubbleAnimationStarted)
+            {
+                RegisterBubbleGeometry();
+                InvalidateVisual();
+            }
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
@@ -224,17 +238,14 @@ namespace BlueprintEditorPlugin.Views.Wires
             }
         }
 
-        protected override void OnRender(DrawingContext drawingContext)
+        private void RegisterBubbleGeometry()
         {
-            base.OnRender(drawingContext);
-
             if (!ShowDirectionalBubbles || BubbleSize <= 0 || Stroke == null)
             {
                 RemoveBubbleGeometry();
                 return;
             }
 
-            bool geometryWasDirty = HasGeometryChanged();
             Geometry geometry = DefiningGeometry;
             if (geometry == null)
             {
@@ -252,7 +263,16 @@ namespace BlueprintEditorPlugin.Views.Wires
                 _lastBubbleGeometry = geometry;
                 _lastBubbleBrush = Stroke;
             }
-            else if (geometryWasDirty)
+        }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+
+            bool geometryWasDirty = HasGeometryChanged();
+            RegisterBubbleGeometry();
+
+            if (_bubbleGeometryRegistered && geometryWasDirty)
             {
                 _parentOverlay?.InvalidateVisual();
             }
