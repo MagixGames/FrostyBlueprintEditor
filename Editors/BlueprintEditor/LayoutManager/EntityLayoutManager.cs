@@ -7,6 +7,7 @@ using BlueprintEditorPlugin.Editors.BlueprintEditor.Connections;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager.Sugiyama;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Ports;
+using BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.NodeWrangler;
 using BlueprintEditorPlugin.Editors.GraphEditor.LayoutManager;
 using BlueprintEditorPlugin.Editors.GraphEditor.LayoutManager.Algorithms.CheapGraph;
@@ -349,8 +350,25 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
 
                     if (transient.Load(layoutReader))
                     {
+                        // Deduplicate: if a WranglerNode with the same NodeId already
+                        // exists (from a previous layout load or manual import), update
+                        // its position instead of creating an orphan duplicate.
+                        bool alreadyExists = false;
+                        if (transient is WranglerNode newWrangler)
+                        {
+                            foreach (IVertex existing in NodeWrangler.Vertices)
+                            {
+                                if (existing is WranglerNode existingWrangler && existingWrangler.NodeId == newWrangler.NodeId)
+                                {
+                                    existingWrangler.Location = newWrangler.Location;
+                                    alreadyExists = true;
+                                    break;
+                                }
+                            }
+                        }
+
                         // InterfaceNodes are pre-created during asset population - don't re-add them
-                        if (!(transient is InterfaceNode))
+                        if (!alreadyExists && !(transient is InterfaceNode))
                         {
                             NodeWrangler.AddVertex(transient);
                         }
