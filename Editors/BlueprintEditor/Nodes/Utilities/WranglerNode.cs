@@ -150,6 +150,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
         public override void OnDestruction()
         {
+            IsSelected = false;
+
             IConnection incoming = null;
             foreach (IConnection connection in NodeWrangler.GetConnections(Inputs[0]))
             {
