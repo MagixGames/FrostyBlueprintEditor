@@ -62,6 +62,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         public INodeWrangler NodeWrangler { get; set; }
         public ILayoutManager LayoutManager { get; set; }
 
+        private Point? _pendingWranglerLocation;
+
         public virtual bool IsValid()
         {
             return true;
@@ -1418,28 +1420,27 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             }
         }
 
+        private void ConnectionContextMenu_Opening(object sender, RoutedEventArgs e)
+        {
+            _pendingWranglerLocation = Mouse.GetPosition(Editor.ItemsHost);
+        }
+
         private void AddWranglerNode_OnClick(object sender, RoutedEventArgs e)
         {
             if (((MenuItem)sender).DataContext is IConnection connection)
             {
-                // Calculate midpoint between source and target for placement
-                Point sourceAnchor = connection.Source.Anchor;
-                Point targetAnchor = connection.Target.Anchor;
-                Point midpoint = new Point(
-                    (sourceAnchor.X + targetAnchor.X) / 2.0,
-                    (sourceAnchor.Y + targetAnchor.Y) / 2.0);
-
-                // Determine connection type from the existing connection
                 ConnectionType type = ConnectionType.Property;
                 if (connection is EntityConnection entityConn)
                 {
                     type = entityConn.Type;
                 }
 
-                // Create the wrangler node
+                Point click = _pendingWranglerLocation ?? Editor.MouseLocation;
+                _pendingWranglerLocation = null;
+
                 WranglerNode wrangler = new WranglerNode(type, NodeWrangler)
                 {
-                    Location = midpoint,
+                    Location = new Point(click.X, click.Y),
                     OriginalSource = connection.Source,
                     OriginalTarget = connection.Target
                 };

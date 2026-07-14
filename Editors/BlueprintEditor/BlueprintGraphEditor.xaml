@@ -121,7 +121,7 @@
                     </wireview:Wire>
                                 
                     <Canvas.ContextMenu>
-                        <ContextMenu>
+                        <ContextMenu Opened="ConnectionContextMenu_Opening">
                             <MenuItem Header="Edit" Command="{Binding EditCommand}">
                                 <MenuItem.Icon>
                                     <Image Source="pack://application:,,,/FrostyEditor;component/images/openasset.png"/>
