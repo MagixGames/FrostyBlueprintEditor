@@ -23,6 +23,10 @@ namespace BlueprintEditorPlugin.Views.Wires
             nameof(BubbleSize), typeof(double), typeof(BaseWire),
             new FrameworkPropertyMetadata(BubbleAnimationManager.BubbleSize, OnBubbleAppearanceChanged));
 
+        public static readonly DependencyProperty EnableDirectionalBubblesProperty = DependencyProperty.Register(
+            nameof(EnableDirectionalBubbles), typeof(bool), typeof(BaseWire),
+            new FrameworkPropertyMetadata(true));
+
         public static readonly DependencyProperty SourceExitRightProperty = DependencyProperty.Register(
             nameof(SourceExitRight), typeof(bool), typeof(BaseWire),
             new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
@@ -65,6 +69,16 @@ namespace BlueprintEditorPlugin.Views.Wires
         {
             get => (double)GetValue(BubbleSizeProperty);
             set => SetValue(BubbleSizeProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets whether this wire is allowed to show directional bubbles.
+        /// When false, <see cref="ShowDirectionalBubbles"/> is forced off regardless of the global option.
+        /// </summary>
+        public bool EnableDirectionalBubbles
+        {
+            get => (bool)GetValue(EnableDirectionalBubblesProperty);
+            set => SetValue(EnableDirectionalBubblesProperty, value);
         }
 
         public bool SourceExitRight
@@ -145,7 +159,7 @@ namespace BlueprintEditorPlugin.Views.Wires
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             _parentOverlay = FindParentOverlay();
-            ShowDirectionalBubbles = EditorOptions.AnimatedDirectionalBubbles;
+            ShowDirectionalBubbles = EnableDirectionalBubbles && EditorOptions.AnimatedDirectionalBubbles;
             EditorOptions.Updated += OnEditorOptionsUpdated;
 
             if (ShowDirectionalBubbles)
@@ -174,7 +188,7 @@ namespace BlueprintEditorPlugin.Views.Wires
 
         private void OnEditorOptionsUpdated()
         {
-            ShowDirectionalBubbles = EditorOptions.AnimatedDirectionalBubbles;
+            ShowDirectionalBubbles = EnableDirectionalBubbles && EditorOptions.AnimatedDirectionalBubbles;
         }
 
         private ConnectionsBubbleOverlay FindParentOverlay()
