@@ -150,7 +150,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
 
         public override void OnDestruction()
         {
-            // Find incoming connection to Inputs[0]
             IConnection incoming = null;
             foreach (IConnection connection in NodeWrangler.GetConnections(Inputs[0]))
             {
@@ -160,29 +159,32 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                     break;
                 }
             }
-            if (incoming == null)
-                return;
 
-            // Find outgoing connections from Outputs[0]
             List<IConnection> outgoing = new List<IConnection>();
             foreach (IConnection connection in NodeWrangler.GetConnections(Outputs[0]))
             {
                 if (connection.Source == Outputs[0])
                     outgoing.Add(connection);
             }
-            if (outgoing.Count == 0)
-                return;
 
-            // Bridge: rewire each outgoing connection to the incoming's source,
-            // splicing this node out of the wire
-            IPort bridgeSource = incoming.Source;
-            foreach (IConnection conn in outgoing)
+            if (incoming != null && outgoing.Count > 0)
             {
-                conn.Source = bridgeSource;
+                IPort bridgeSource = incoming.Source;
+                foreach (IConnection conn in outgoing)
+                    conn.Source = bridgeSource;
+
+                NodeWrangler.RemoveConnection(incoming);
+                return;
             }
 
-            // Remove the incoming connection (now bypassed by the bridged outgoings)
-            NodeWrangler.RemoveConnection(incoming);
+            if (incoming != null)
+            {
+                NodeWrangler.RemoveConnection(incoming);
+                return;
+            }
+
+            foreach (IConnection conn in outgoing)
+                NodeWrangler.RemoveConnection(conn);
         }
 
         public override void OnCreation()
