@@ -1465,7 +1465,7 @@
                                Height="14"
                                HorizontalAlignment="Left"
                                VerticalAlignment="Top"
-                               Cursor="SizeNESW"
+                               Cursor="SizeNWSE"
                                DragDelta="MinimapResizeThumb_OnDragDelta"
                                Background="Transparent">
                             <Thumb.Template>
