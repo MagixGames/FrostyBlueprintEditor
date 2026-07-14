@@ -1425,34 +1425,44 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             _pendingWranglerLocation = Mouse.GetPosition(Editor.ItemsHost);
         }
 
+        private void InsertWranglerAtConnection(IConnection connection, Point location)
+        {
+            ConnectionType type = ConnectionType.Property;
+            if (connection is EntityConnection entityConn)
+                type = entityConn.Type;
+
+            WranglerNode wrangler = new WranglerNode(type, NodeWrangler)
+            {
+                Location = location,
+                OriginalSource = connection.Source,
+                OriginalTarget = connection.Target
+            };
+
+            connection.Target = wrangler.Inputs[0];
+            NodeWrangler.AddVertex(wrangler);
+            NodeWrangler.AddConnection(new TransientConnection(wrangler.Outputs[0], wrangler.OriginalTarget, type));
+        }
+
+        private void Wire_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount >= 2)
+            {
+                if (((FrameworkElement)sender).DataContext is IConnection connection)
+                {
+                    Point click = Mouse.GetPosition(Editor.ItemsHost);
+                    InsertWranglerAtConnection(connection, click);
+                }
+                e.Handled = true;
+            }
+        }
+
         private void AddWranglerNode_OnClick(object sender, RoutedEventArgs e)
         {
             if (((MenuItem)sender).DataContext is IConnection connection)
             {
-                ConnectionType type = ConnectionType.Property;
-                if (connection is EntityConnection entityConn)
-                {
-                    type = entityConn.Type;
-                }
-
                 Point click = _pendingWranglerLocation ?? Editor.MouseLocation;
                 _pendingWranglerLocation = null;
-
-                WranglerNode wrangler = new WranglerNode(type, NodeWrangler)
-                {
-                    Location = new Point(click.X, click.Y),
-                    OriginalSource = connection.Source,
-                    OriginalTarget = connection.Target
-                };
-
-                // Retarget the existing connection to go into the wrangler's input
-                connection.Target = wrangler.Inputs[0];
-
-                // Add the wrangler node to the graph
-                NodeWrangler.AddVertex(wrangler);
-
-                // Create a transient connection from the wrangler's output to the original target
-                NodeWrangler.AddConnection(new TransientConnection(wrangler.Outputs[0], wrangler.OriginalTarget, type));
+                InsertWranglerAtConnection(connection, click);
             }
         }
 

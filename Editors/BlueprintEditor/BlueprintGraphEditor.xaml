@@ -44,7 +44,8 @@
                                    RenderOptions.CachingHint="Cache"
                                    RenderOptions.CacheInvalidationThresholdMaximum="4"
                                    RenderOptions.CacheInvalidationThresholdMinimum="0.85"
-                                   RenderOptions.BitmapScalingMode="Linear">
+                                    RenderOptions.BitmapScalingMode="Linear"
+                                    MouseLeftButtonDown="Wire_OnMouseLeftButtonDown">
                         <wireview:Wire.Style>
                             <Style TargetType="{x:Type wireview:Wire}">
                                 <Style.Triggers>
