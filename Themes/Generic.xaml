@@ -52,6 +52,23 @@
                      Color="#EEE8AB" 
                      presentationOptions:Freeze="True" />
     
+    <DropShadowEffect x:Key="WireStatusFlawedEffect"
+                      RenderingBias="Performance"
+                      Color="Goldenrod"
+                      Direction="315" />
+    <DropShadowEffect x:Key="WireStatusBrokenEffect"
+                      RenderingBias="Performance"
+                      Color="Red"
+                      Direction="315" />
+    <DropShadowEffect x:Key="WireHasPlayerEffect"
+                      RenderingBias="Performance"
+                      Color="#5FD95F"
+                      Direction="315" />
+    <DropShadowEffect x:Key="WireInterfacePropertyEffect"
+                      RenderingBias="Performance"
+                      Color="#2D9B2D"
+                      Direction="315" />
+    
     <!--Blueprint Editor-->
     <Style TargetType="{x:Type blueprintEditor:BlueprintEditor}">
         <Setter Property="Template">

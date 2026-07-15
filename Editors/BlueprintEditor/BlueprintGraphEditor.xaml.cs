@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
+using System.Windows.Media;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Connections;
 
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Extensions;
@@ -64,6 +66,42 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
         private Point? _pendingWranglerLocation;
 
+        #region Performance Overlay
+        
+        private Stopwatch _perfTimer;
+        private int _perfFrameCount;
+
+        private void OnPerfFrame(object sender, EventArgs e)
+        {
+            _perfFrameCount++;
+            if (_perfTimer.Elapsed.TotalMilliseconds >= 500)
+            {
+                double fps = _perfFrameCount / _perfTimer.Elapsed.TotalSeconds;
+                _perfTimer.Restart();
+                _perfFrameCount = 0;
+
+                if (PerfOverlay.Visibility == Visibility.Visible)
+                {
+                    int connCount = NodeWrangler?.Connections?.Count ?? 0;
+                    int nodeCount = NodeWrangler?.Vertices?.Count ?? 0;
+                    PerfOverlayText.Text = $"FPS: {fps:F0} | FT: {1000.0 / fps:F1}ms | Cons: {connCount} | Nodes: {nodeCount}";
+                }
+            }
+        }
+
+        private void TogglePerfOverlay_Click(object sender, RoutedEventArgs e)
+        {
+            var item = (MenuItem)sender;
+            PerfOverlay.Visibility = item.IsChecked ? Visibility.Visible : Visibility.Collapsed;
+            if (item.IsChecked)
+            {
+                _perfTimer.Restart();
+                _perfFrameCount = 0;
+            }
+        }
+        
+        #endregion
+        
         public virtual bool IsValid()
         {
             return true;
@@ -89,6 +127,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
         public virtual void Closed()
         {
+            CompositionTarget.Rendering -= OnPerfFrame;
+            
             if (!EditorOptions.SaveOnExit) return;
 
             LayoutManager.NodeWrangler = NodeWrangler;
@@ -149,6 +189,34 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                     MenuItems.Items.Add(subItem);
                 }
             }
+            
+            MenuItem developerItem = null;
+            foreach (MenuItem menuItem in MenuItems.Items)
+            {
+                if ((string)menuItem.Header == "Developer")
+                {
+                    developerItem = menuItem;
+                    break;
+                }
+            }
+
+            if (developerItem == null)
+            {
+                developerItem = new MenuItem { Header = "Developer" };
+                MenuItems.Items.Add(developerItem);
+            }
+
+            MenuItem perfOverlayItem = new MenuItem
+            {
+                Header = "Show Performance Overlay",
+                IsCheckable = true,
+                IsChecked = false
+            };
+            perfOverlayItem.Click += TogglePerfOverlay_Click;
+            developerItem.Items.Add(perfOverlayItem);
+
+            CompositionTarget.Rendering += OnPerfFrame;
+            _perfTimer = Stopwatch.StartNew();
         }
 
         public virtual void LoadAsset(EbxAssetEntry assetEntry)
@@ -645,7 +713,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         }
 
         #endregion
-
+        
         #region Nodes
 
         #region Visuals

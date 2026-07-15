@@ -70,48 +70,32 @@
                                     
                                     <DataTrigger Binding="{Binding CurrentStatus.Status}"
                                                  Value="{x:Static status:EditorStatus.Flawed}">
-                                        <Setter Property="Effect">
-                                            <Setter.Value>
-                                                <DropShadowEffect RenderingBias="Performance"
-                                                                  Color="Goldenrod"
-                                                                  Direction="315" />
-                                            </Setter.Value>
+                                        <Setter Property="Effect"
+                                                Value="{StaticResource WireStatusFlawedEffect}">
                                         </Setter>
                                         <Setter Property="ToolTip"
                                                 Value="{Binding CurrentStatus.ToolTip}" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding CurrentStatus.Status}"
                                                  Value="{x:Static status:EditorStatus.Broken}">
-                                        <Setter Property="Effect">
-                                            <Setter.Value>
-                                                <DropShadowEffect RenderingBias="Performance"
-                                                                  Color="Red"
-                                                                  Direction="315" />
-                                            </Setter.Value>
+                                        <Setter Property="Effect"
+                                                Value="{StaticResource WireStatusBrokenEffect}">
                                         </Setter>
                                         <Setter Property="ToolTip"
                                                 Value="{Binding CurrentStatus.ToolTip}" />
                                     </DataTrigger>
                                     
                                     <DataTrigger Binding="{Binding HasPlayer}" Value="true">
-                                        <Setter Property="Effect">
-                                            <Setter.Value>
-                                                <DropShadowEffect RenderingBias="Performance"
-                                                                  Color="#5FD95F"
-                                                                  Direction="315" />
-                                            </Setter.Value>
+                                        <Setter Property="Effect"
+                                                Value="{StaticResource WireHasPlayerEffect}">
                                         </Setter>
                                         <Setter Property="ToolTip"
                                                 Value="This connection has a Player Event attatched to it" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding PropType}"
                                                  Value="{x:Static networking:PropertyType.Interface}">
-                                        <Setter Property="Effect">
-                                            <Setter.Value>
-                                                <DropShadowEffect RenderingBias="Performance"
-                                                                  Color="#2D9B2D"
-                                                                  Direction="315" />
-                                            </Setter.Value>
+                                        <Setter Property="Effect"
+                                                Value="{StaticResource WireInterfacePropertyEffect}">
                                         </Setter>
                                         <Setter Property="ToolTip"
                                                 Value="This connection goes into an interface" />
@@ -1436,6 +1420,21 @@
                             </ContextMenu>
                         </editor:NodifyEditor.ContextMenu>
                     </editor:NodifyEditor>
+                    
+                    <Border x:Name="PerfOverlay"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            Margin="10,0,0,10"
+                            Background="#80000000"
+                            CornerRadius="3"
+                            Padding="6,3"
+                            IsHitTestVisible="False"
+                            Visibility="Collapsed">
+                        <TextBlock x:Name="PerfOverlayText"
+                                   FontFamily="Consolas"
+                                   FontSize="11"
+                                   Foreground="#FF00FF00" />
+                    </Border>
 
                     <Grid x:Name="MinimapContainer"
                           HorizontalAlignment="Right"
