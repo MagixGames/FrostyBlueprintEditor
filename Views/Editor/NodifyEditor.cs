@@ -207,6 +207,9 @@ namespace BlueprintEditorPlugin.Views.Editor
         {
             if (ItemsHost != null)
             {
+                if (IsPanning)
+                    return;
+                
                 if (EnableRenderingContainersOptimizations && Items.Count >= OptimizeRenderingMinimumContainers)
                 {
                     double zoom = ViewportZoom;
