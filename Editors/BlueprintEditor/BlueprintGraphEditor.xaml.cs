@@ -65,42 +65,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         public ILayoutManager LayoutManager { get; set; }
 
         private Point? _pendingWranglerLocation;
-
-        #region Performance Overlay
-        
-        private Stopwatch _perfTimer;
-        private int _perfFrameCount;
-
-        private void OnPerfFrame(object sender, EventArgs e)
-        {
-            _perfFrameCount++;
-            if (_perfTimer.Elapsed.TotalMilliseconds >= 500)
-            {
-                double fps = _perfFrameCount / _perfTimer.Elapsed.TotalSeconds;
-                _perfTimer.Restart();
-                _perfFrameCount = 0;
-
-                if (PerfOverlay.Visibility == Visibility.Visible)
-                {
-                    int connCount = NodeWrangler?.Connections?.Count ?? 0;
-                    int nodeCount = NodeWrangler?.Vertices?.Count ?? 0;
-                    PerfOverlayText.Text = $"FPS: {fps:F0} | FT: {1000.0 / fps:F1}ms | Cons: {connCount} | Nodes: {nodeCount}";
-                }
-            }
-        }
-
-        private void TogglePerfOverlay_Click(object sender, RoutedEventArgs e)
-        {
-            var item = (MenuItem)sender;
-            PerfOverlay.Visibility = item.IsChecked ? Visibility.Visible : Visibility.Collapsed;
-            if (item.IsChecked)
-            {
-                _perfTimer.Restart();
-                _perfFrameCount = 0;
-            }
-        }
-        
-        #endregion
         
         public virtual bool IsValid()
         {
@@ -163,26 +127,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
                 if (menuExtension.SubLevelMenuName != null)
                 {
-                    MenuItem topItem = null;
-                    foreach (MenuItem menuItem in MenuItems.Items)
-                    {
-                        if ((string)menuItem.Header == menuExtension.SubLevelMenuName)
-                        {
-                            topItem = menuItem;
-                        }
-                    }
-
-
-                    if (topItem == null)
-                    {
-                        topItem = new MenuItem()
-                        {
-                            Header = menuExtension.SubLevelMenuName
-                        };
-                        MenuItems.Items.Add(topItem);
-                    }
-                    
-                    topItem.Items.Add(subItem);
+                    FindOrCreateTopLevelMenu(menuExtension.SubLevelMenuName).Items.Add(subItem);
                 }
                 else
                 {
@@ -190,22 +135,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                 }
             }
             
-            MenuItem developerItem = null;
-            foreach (MenuItem menuItem in MenuItems.Items)
-            {
-                if ((string)menuItem.Header == "Developer")
-                {
-                    developerItem = menuItem;
-                    break;
-                }
-            }
-
-            if (developerItem == null)
-            {
-                developerItem = new MenuItem { Header = "Developer" };
-                MenuItems.Items.Add(developerItem);
-            }
-
             MenuItem perfOverlayItem = new MenuItem
             {
                 Header = "Show Performance Overlay",
@@ -213,10 +142,10 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                 IsChecked = false
             };
             perfOverlayItem.Click += TogglePerfOverlay_Click;
-            developerItem.Items.Add(perfOverlayItem);
-
             CompositionTarget.Rendering += OnPerfFrame;
             _perfTimer = Stopwatch.StartNew();
+            
+            FindOrCreateTopLevelMenu("Developer").Items.Add(perfOverlayItem);
         }
 
         public virtual void LoadAsset(EbxAssetEntry assetEntry)
@@ -692,6 +621,19 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             });
         }
 
+        private MenuItem FindOrCreateTopLevelMenu(string header)
+        {
+            foreach (MenuItem menuItem in MenuItems.Items)
+            {
+                if (menuItem.Header == header)
+                    return menuItem;
+            }
+
+            var newItem = new MenuItem { Header = header };
+            MenuItems.Items.Add(newItem);
+            return newItem;
+        }
+        
         #region Static
 
         public static List<Type> Types = new List<Type>();
@@ -712,6 +654,42 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             NodeUtils.Add(new EntityComment("Comment"));
         }
 
+        #endregion
+        
+        #region Performance Overlay
+        
+        private Stopwatch _perfTimer;
+        private int _perfFrameCount;
+
+        private void OnPerfFrame(object sender, EventArgs e)
+        {
+            _perfFrameCount++;
+            if (_perfTimer.Elapsed.TotalMilliseconds >= 500)
+            {
+                double fps = _perfFrameCount / _perfTimer.Elapsed.TotalSeconds;
+                _perfTimer.Restart();
+                _perfFrameCount = 0;
+
+                if (PerfOverlay.Visibility == Visibility.Visible)
+                {
+                    int connCount = NodeWrangler?.Connections?.Count ?? 0;
+                    int nodeCount = NodeWrangler?.Vertices?.Count ?? 0;
+                    PerfOverlayText.Text = $"FPS: {fps:F0} | FT: {1000.0 / fps:F1}ms | Cons: {connCount} | Nodes: {nodeCount}";
+                }
+            }
+        }
+
+        private void TogglePerfOverlay_Click(object sender, RoutedEventArgs e)
+        {
+            var item = (MenuItem)sender;
+            PerfOverlay.Visibility = item.IsChecked ? Visibility.Visible : Visibility.Collapsed;
+            if (item.IsChecked)
+            {
+                _perfTimer.Restart();
+                _perfFrameCount = 0;
+            }
+        }
+        
         #endregion
         
         #region Nodes
