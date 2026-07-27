@@ -29,7 +29,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
     {
         private string _header;
         private Point _location;
-        private Size _size;
         private bool _isSelected;
 
         public string Header
@@ -68,15 +67,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
             }
         }
 
-        public Size Size
-        {
-            get => _size;
-            set
-            {
-                _size = value;
-                NotifyPropertyChanged(nameof(Size));
-            }
-        }
+        public Size Size { get; set; }
 
         public bool IsSelected
         {
@@ -169,22 +160,12 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
 
         public EntityInput GetInput(string name, ConnectionType type)
         {
-            if (Inputs.Count == 0)
-                return null;
-            var input = (EntityInput)Inputs[0];
-            if (input.Name != name || input.Type != type)
-                return null;
-            return input;
+            return (EntityInput)Inputs[0];
         }
 
         public EntityOutput GetOutput(string name, ConnectionType type)
         {
-            if (Outputs.Count == 0)
-                return null;
-            var output = (EntityOutput)Outputs[0];
-            if (output.Name != name || output.Type != type)
-                return null;
-            return output;
+            return (EntityOutput)Outputs[0];
         }
 
         public void AddInput(EntityInput input)
@@ -325,7 +306,10 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes
             }
 
             real.Location = reader.ReadPoint();
-            return true;
+            
+            // TODO HACK: We create interface nodes before we read layouts. So in order to read transient data from them, we can't add new ones.
+            // Resulting in this hack of a method
+            return false;
         }
 
         public void Save(LayoutWriter writer)

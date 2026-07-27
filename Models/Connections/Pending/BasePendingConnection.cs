@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -50,18 +49,17 @@ namespace BlueprintEditorPlugin.Models.Connections.Pending
             get
             {
                 //The curve point is just the average of the 2 points
-                double offset = Math.Max(40, Math.Min(150, Math.Abs(TargetAnchor.X - SourceAnchor.X) * 0.5));
                 if (Source != null && Source.Direction == PortDirection.Out)
                 {
                     if (EditorOptions.WireStyle == ConnectionStyle.Curvy)
                     {
                         //The curve point is just the average of the 2 points
-                        return new Point(SourceAnchor.X + offset,
+                        return new Point(SourceAnchor.X + 85,
                             Source.Anchor.Y);
                     }
                     else
                     {
-                        return new Point(SourceAnchor.X + offset,
+                        return new Point(SourceAnchor.X + 25,
                             Source.Anchor.Y);
                     }
                 }
@@ -70,12 +68,12 @@ namespace BlueprintEditorPlugin.Models.Connections.Pending
                     if (EditorOptions.WireStyle == ConnectionStyle.Curvy)
                     {
                         //The curve point is just the average of the 2 points
-                        return new Point(TargetAnchor.X - offset,
+                        return new Point(TargetAnchor.X - 85,
                             TargetAnchor.Y);
                     }
                     else
                     {
-                        return new Point(TargetAnchor.X - offset,
+                        return new Point(TargetAnchor.X - 25,
                             TargetAnchor.Y);
                     }
                 }
@@ -86,19 +84,18 @@ namespace BlueprintEditorPlugin.Models.Connections.Pending
         {
             get
             {
-                double offset = Math.Max(40, Math.Min(150, Math.Abs(TargetAnchor.X - SourceAnchor.X) * 0.5));
                 //The curve point is just the average of the 2 points
                 if (Source != null && Source.Direction == PortDirection.Out)
                 {
                     if (EditorOptions.WireStyle == ConnectionStyle.Curvy)
                     {
                         //The curve point is just the average of the 2 points
-                        return new Point(TargetAnchor.X - offset,
+                        return new Point(TargetAnchor.X - 85,
                             TargetAnchor.Y);
                     }
                     else
                     {
-                        return new Point(TargetAnchor.X - offset,
+                        return new Point(TargetAnchor.X - 25,
                             TargetAnchor.Y);
                     }
                 }
@@ -107,12 +104,12 @@ namespace BlueprintEditorPlugin.Models.Connections.Pending
                     if (EditorOptions.WireStyle == ConnectionStyle.Curvy)
                     {
                         //The curve point is just the average of the 2 points
-                        return new Point(TargetAnchor.X + offset,
+                        return new Point(TargetAnchor.X + 85,
                             TargetAnchor.Y);
                     }
                     else
                     {
-                        return new Point(TargetAnchor.X + offset,
+                        return new Point(TargetAnchor.X + 25,
                             TargetAnchor.Y);
                     }
                 }

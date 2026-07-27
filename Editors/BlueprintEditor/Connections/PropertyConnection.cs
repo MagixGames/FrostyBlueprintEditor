@@ -140,7 +140,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Connections
             {
                 case "IsSelected":
                 {
-                    base.NotifyPropertyChanged(sender, e);
+                    IsSelected = Source.Node.IsSelected || Target.Node.IsSelected;
+                    NotifyPropertyChanged(nameof(IsSelected));
                 } break;
                 case "Realm":
                 {
