@@ -329,15 +329,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager
                 }
             }
 
-            // Remove existing redirect nodes so layout reload doesn't create duplicates
-            List<IVertex> existingRedirects = NodeWrangler.Vertices
-                .Where(v => v is EntityInputRedirect || v is EntityOutputRedirect)
-                .ToList();
-            foreach (IVertex redirect in existingRedirects)
-            {
-                NodeWrangler.RemoveVertex(redirect);
-            }
-
             // Read through all trans
             count = layoutReader.ReadInt();
             int transLoaded = 0;
