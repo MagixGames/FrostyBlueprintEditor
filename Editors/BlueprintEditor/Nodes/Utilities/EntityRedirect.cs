@@ -68,10 +68,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                 ConnectionType type = (ConnectionType)reader.ReadInt();
                 string portName = reader.ReadNullTerminatedString();
                 InterfaceNode node = wrangler.GetInterfaceNode(portName, PortDirection.In, type);
-
-                if (node == null)
-                    return false;
-
                 EntityInput input = node.GetInput(portName, type);
 
                 RedirectTarget = input;
@@ -145,9 +141,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                     node = wrangler.GetEntityNode(new AssetClassGuid(reader.ReadInt()));
                 }
                 
-                if (node == null)
-                    return false;
-
                 ConnectionType type = (ConnectionType)reader.ReadInt();
                 EntityPort port = node.GetInput(reader.ReadNullTerminatedString(), type);
 
@@ -460,8 +453,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
             {
                 foreach (IConnection connection in NodeWrangler.GetConnections(Outputs[0]))
                 {
-                    if (connection.Source != Outputs[0])
-                        continue;
+                    if (connection.Target != Outputs[0])
+                        return;
                     connection.Source = RedirectTarget;
                 }
             }
@@ -505,10 +498,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                 ConnectionType type = (ConnectionType)reader.ReadInt();
                 string portName = reader.ReadNullTerminatedString();
                 InterfaceNode node = wrangler.GetInterfaceNode(portName, PortDirection.Out, type);
-
-                if (node == null)
-                    return false;
-
                 EntityOutput output = node.GetOutput(portName, type);
 
                 RedirectTarget = output;
@@ -582,9 +571,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes.Utilities
                     node = wrangler.GetEntityNode(new AssetClassGuid(reader.ReadInt()));
                 }
                 
-                if (node == null)
-                    return false;
-
                 ConnectionType type = (ConnectionType)reader.ReadInt();
                 EntityPort port = node.GetOutput(reader.ReadNullTerminatedString(), type);
 
