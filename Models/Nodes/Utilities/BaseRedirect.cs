@@ -143,7 +143,7 @@ namespace BlueprintEditorPlugin.Models.Nodes.Utilities
                 foreach (IConnection connection in NodeWrangler.GetConnections(Inputs[0]))
                 {
                     if (connection.Target != Inputs[0])
-                        return;
+                        continue;
                     
                     connection.Target = RedirectTarget;
                 }
