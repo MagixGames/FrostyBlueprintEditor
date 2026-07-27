@@ -32,28 +32,20 @@ namespace BlueprintEditorPlugin.Models.Nodes.Utilities
             }
         }
         
-        /// <summary>
-        /// The size of the comment on the graph. Mirrors <see cref="CommentSize"/>.
-        /// </summary>
-        public Size Size
-        {
-            get => CommentSize;
-            set => CommentSize = value;
-        }
+        public Size Size { get; set; }
 
-        private Size _commentSize;
+        private Size _size;
         
         /// <summary>
         /// Use this for setting the size of comments, sorry!
         /// </summary>
         public Size CommentSize
         {
-            get => _commentSize;
+            get => _size;
             set
             {
-                _commentSize = value;
+                _size = value;
                 NotifyPropertyChanged(nameof(CommentSize));
-                NotifyPropertyChanged(nameof(Size));
             }
         }
 
