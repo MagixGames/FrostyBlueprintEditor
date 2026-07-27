@@ -207,9 +207,6 @@ namespace BlueprintEditorPlugin.Views.Editor
         {
             if (ItemsHost != null)
             {
-                if (IsPanning)
-                    return;
-                
                 if (EnableRenderingContainersOptimizations && Items.Count >= OptimizeRenderingMinimumContainers)
                 {
                     double zoom = ViewportZoom;
@@ -631,7 +628,6 @@ namespace BlueprintEditorPlugin.Views.Editor
 
         private IDraggingStrategy _draggingStrategy;
         private DispatcherTimer _autoPanningTimer;
-        private ConnectionsBubbleOverlay _bubbleOverlay;
 
         /// <summary>
         /// Gets a list of <see cref="ItemContainer"/>s that are selected.
@@ -699,16 +695,9 @@ namespace BlueprintEditorPlugin.Views.Editor
 
             ItemsHost = GetTemplateChild(ElementItemsHost) as Panel ?? throw new InvalidOperationException("PART_ItemsHost is missing or is not of type Panel.");
 
-            InitializeBubbleOverlay();
-
             OnDisableAutoPanningChanged(DisableAutoPanning);
 
             State.Enter(null);
-        }
-
-        private void InitializeBubbleOverlay()
-        {
-            _bubbleOverlay = GetTemplateChild("PART_ConnectionsBubbleOverlay") as ConnectionsBubbleOverlay;
         }
 
         /// <inheritdoc />

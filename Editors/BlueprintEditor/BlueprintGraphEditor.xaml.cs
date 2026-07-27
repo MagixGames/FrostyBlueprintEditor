@@ -2,18 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
-using System.Windows.Media;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Connections;
-
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Extensions;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.LayoutManager;
 using BlueprintEditorPlugin.Editors.BlueprintEditor.Nodes;
@@ -33,9 +29,7 @@ using BlueprintEditorPlugin.Models.Nodes.Ports;
 using BlueprintEditorPlugin.Models.Nodes.Utilities;
 using BlueprintEditorPlugin.Models.Status;
 using BlueprintEditorPlugin.Options;
-using Nodify.Events;
 using BlueprintEditorPlugin.Views.Editor;
-using BlueprintEditorPlugin.Views.Helpers;
 using BlueprintEditorPlugin.Windows;
 using Frosty.Core;
 using Frosty.Core.Controls;
@@ -64,8 +58,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         public INodeWrangler NodeWrangler { get; set; }
         public ILayoutManager LayoutManager { get; set; }
 
-        private Point? _pendingWranglerLocation;
-        
         public virtual bool IsValid()
         {
             return true;
@@ -91,24 +83,21 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
         public virtual void Closed()
         {
-            CompositionTarget.Rendering -= OnPerfFrame;
-            
             if (!EditorOptions.SaveOnExit) return;
-
-            LayoutManager.NodeWrangler = NodeWrangler;
+            
             EbxAssetEntry assetEntry = App.AssetManager.GetEbxEntry(((EntityNodeWrangler)NodeWrangler).Asset.FileGuid);
             LayoutManager.SaveLayout($"{assetEntry.Name}.lyt");
         }
 
         #endregion
-        
+
         public BlueprintGraphEditor()
         {
             NodeWrangler = new EntityNodeWrangler();
-
+            
             InitializeComponent();
             NodePropertyGrid.NodeWrangler = NodeWrangler;
-
+            
             LayoutManager = new EntityLayoutManager(NodeWrangler);
 
             foreach (Type extensionType in ExtensionsManager.BlueprintMenuItemExtensions)
@@ -127,25 +116,32 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
                 if (menuExtension.SubLevelMenuName != null)
                 {
-                    FindOrCreateTopLevelMenu(menuExtension.SubLevelMenuName).Items.Add(subItem);
+                    MenuItem topItem = null;
+                    foreach (MenuItem menuItem in MenuItems.Items)
+                    {
+                        if ((string)menuItem.Header == menuExtension.SubLevelMenuName)
+                        {
+                            topItem = menuItem;
+                        }
+                    }
+
+
+                    if (topItem == null)
+                    {
+                        topItem = new MenuItem()
+                        {
+                            Header = menuExtension.SubLevelMenuName
+                        };
+                        MenuItems.Items.Add(topItem);
+                    }
+                    
+                    topItem.Items.Add(subItem);
                 }
                 else
                 {
                     MenuItems.Items.Add(subItem);
                 }
             }
-            
-            MenuItem perfOverlayItem = new MenuItem
-            {
-                Header = "Show Performance Overlay",
-                IsCheckable = true,
-                IsChecked = false
-            };
-            perfOverlayItem.Click += TogglePerfOverlay_Click;
-            CompositionTarget.Rendering += OnPerfFrame;
-            _perfTimer = Stopwatch.StartNew();
-            
-            FindOrCreateTopLevelMenu("Developer").Items.Add(perfOverlayItem);
         }
 
         public virtual void LoadAsset(EbxAssetEntry assetEntry)
@@ -156,9 +152,8 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             if (layoutManager != null)
             {
                 LayoutManager = layoutManager;
+                LayoutManager.NodeWrangler = NodeWrangler;
             }
-
-            LayoutManager.NodeWrangler = NodeWrangler;
 
             CheapMethod cheap = new CheapMethod(NodeWrangler);
             foreach (object assetObject in wrangler.Asset.Objects)
@@ -607,33 +602,16 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
             #endregion
 
-            // Layout loading must run on the UI thread to ensure all vertex dispatches are complete
-            Application.Current.Dispatcher.Invoke(() =>
+            if (!LayoutManager.LayoutExists($"{assetEntry.Name}.lyt"))
             {
-                if (!LayoutManager.LayoutExists($"{assetEntry.Name}.lyt"))
-                {
-                    LayoutManager.SortLayout();
-                }
-                else
-                {
-                    LayoutManager.LoadLayoutRelative($"{assetEntry.Name}.lyt");
-                }
-            });
-        }
-
-        private MenuItem FindOrCreateTopLevelMenu(string header)
-        {
-            foreach (MenuItem menuItem in MenuItems.Items)
-            {
-                if (menuItem.Header == header)
-                    return menuItem;
+                LayoutManager.SortLayout();
             }
-
-            var newItem = new MenuItem { Header = header };
-            MenuItems.Items.Add(newItem);
-            return newItem;
+            else
+            {
+                LayoutManager.LoadLayoutRelative($"{assetEntry.Name}.lyt");
+            }
         }
-        
+
         #region Static
 
         public static List<Type> Types = new List<Type>();
@@ -655,43 +633,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
         }
 
         #endregion
-        
-        #region Performance Overlay
-        
-        private Stopwatch _perfTimer;
-        private int _perfFrameCount;
 
-        private void OnPerfFrame(object sender, EventArgs e)
-        {
-            _perfFrameCount++;
-            if (_perfTimer.Elapsed.TotalMilliseconds >= 500)
-            {
-                double fps = _perfFrameCount / _perfTimer.Elapsed.TotalSeconds;
-                _perfTimer.Restart();
-                _perfFrameCount = 0;
-
-                if (PerfOverlay.Visibility == Visibility.Visible)
-                {
-                    int connCount = NodeWrangler?.Connections?.Count ?? 0;
-                    int nodeCount = NodeWrangler?.Vertices?.Count ?? 0;
-                    PerfOverlayText.Text = $"FPS: {fps:F0} | FT: {1000.0 / fps:F1}ms | Cons: {connCount} | Nodes: {nodeCount}";
-                }
-            }
-        }
-
-        private void TogglePerfOverlay_Click(object sender, RoutedEventArgs e)
-        {
-            var item = (MenuItem)sender;
-            PerfOverlay.Visibility = item.IsChecked ? Visibility.Visible : Visibility.Collapsed;
-            if (item.IsChecked)
-            {
-                _perfTimer.Restart();
-                _perfFrameCount = 0;
-            }
-        }
-        
-        #endregion
-        
         #region Nodes
 
         #region Visuals
@@ -792,13 +734,16 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             List<IVertex> oldSelection = new List<IVertex>(NodeWrangler.SelectedVertices);
             foreach (IVertex selectedNode in oldSelection)
             {
-                if (selectedNode is IRedirect redirect && 
-                    (redirect.SourceRedirect != null || redirect.TargetRedirect != null))
+                if (selectedNode is IRedirect redirect)
                 {
                     if (redirect.SourceRedirect != null)
+                    {
                         NodeWrangler.RemoveVertex(redirect.SourceRedirect);
+                    }
                     else
+                    {
                         NodeWrangler.RemoveVertex(redirect.TargetRedirect);
+                    }
                 }
                 
                 NodeWrangler.RemoveVertex(selectedNode);
@@ -999,7 +944,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
 
         private void SaveOrganizationButton_OnClick(object sender, RoutedEventArgs e)
         {
-            LayoutManager.NodeWrangler = NodeWrangler;
             EbxAssetEntry assetEntry = App.AssetManager.GetEbxEntry(((EntityNodeWrangler)NodeWrangler).Asset.FileGuid);
             if (LayoutManager.SaveLayout($"{assetEntry.Name}.lyt"))
             {
@@ -1017,7 +961,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             if (!ofd.ShowDialog())
                 return;
 
-            LayoutManager.NodeWrangler = NodeWrangler;
             LayoutManager.LoadLayout(ofd.FileName);
         }
 
@@ -1083,7 +1026,7 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                     {
                         if (selectedNode is EntityNode entityNode)
                         {
-                            FrostyClipboard.Current.SetData(entityNode.Object);
+                            FrostyClipboard.Current.SetData(entityNode.Object); // TODO: Work around, need to copy data
                             EntityNode newNode = EntityNode.GetNodeFromEntity(FrostyClipboard.Current.GetData(), NodeWrangler, true);
                             newNode.Location = new Point(selectedNode.Location.X + 15, selectedNode.Location.Y + 15);
                             NodeWrangler.AddVertex(newNode);
@@ -1098,7 +1041,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                 } break;
                 case Key.S when (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift:
                 {
-                    LayoutManager.NodeWrangler = NodeWrangler;
                     EbxAssetEntry assetEntry = App.AssetManager.GetEbxEntry(((EntityNodeWrangler)NodeWrangler).Asset.FileGuid);
                     LayoutManager.SaveLayout($"{assetEntry.Name}.lyt");
                 } break;
@@ -1210,32 +1152,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                     NodeWrangler.AddVertex(vertex);
                 }
             }
-        }
-
-        #endregion
-
-        #region Minimap
-
-        private void OnMinimapZoom(object sender, ZoomEventArgs e)
-        {
-            Editor.ZoomAtPosition(e.Zoom, e.Location);
-        }
-
-        private void MinimapResizeThumb_OnDragDelta(object sender, DragDeltaEventArgs e)
-        {
-            // Project the drag vector onto the diagonal so the minimap only sizes diagonally.
-            // With the grip at the top-left and the container anchored to the bottom-right,
-            // dragging up-left enlarges and dragging down-right shrinks.
-            double diagonalDelta = (e.HorizontalChange + e.VerticalChange) / 2.0;
-
-            double newWidth = MinimapContainer.ActualWidth - diagonalDelta;
-            double newHeight = MinimapContainer.ActualHeight - diagonalDelta;
-
-            newWidth = Math.Max(newWidth, MinimapContainer.MinWidth);
-            newHeight = Math.Max(newHeight, MinimapContainer.MinHeight);
-
-            MinimapContainer.Width = newWidth;
-            MinimapContainer.Height = newHeight;
         }
 
         #endregion
@@ -1463,52 +1379,6 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
                 Point location = new Point(connection.Target.Node.Location.X + (connection.Target.Node.Size.Width / 2),
                     connection.Target.Node.Location.Y + (connection.Target.Node.Size.Height / 2));
                 Editor.BringIntoView(location);
-            }
-        }
-
-        private void ConnectionContextMenu_Opening(object sender, RoutedEventArgs e)
-        {
-            _pendingWranglerLocation = Mouse.GetPosition(Editor.ItemsHost);
-        }
-
-        private void InsertWranglerAtConnection(IConnection connection, Point location)
-        {
-            ConnectionType type = ConnectionType.Property;
-            if (connection is EntityConnection entityConn)
-                type = entityConn.Type;
-
-            WranglerNode wrangler = new WranglerNode(type, NodeWrangler)
-            {
-                Location = location,
-                OriginalSource = connection.Source,
-                OriginalTarget = connection.Target
-            };
-
-            connection.Target = wrangler.Inputs[0];
-            NodeWrangler.AddVertex(wrangler);
-            NodeWrangler.AddConnection(new TransientConnection(wrangler.Outputs[0], wrangler.OriginalTarget, type));
-        }
-
-        private void Wire_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ClickCount >= 2)
-            {
-                if (((FrameworkElement)sender).DataContext is IConnection connection)
-                {
-                    Point click = Mouse.GetPosition(Editor.ItemsHost);
-                    InsertWranglerAtConnection(connection, click);
-                }
-                e.Handled = true;
-            }
-        }
-
-        private void AddWranglerNode_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (((MenuItem)sender).DataContext is IConnection connection)
-            {
-                Point click = _pendingWranglerLocation ?? Editor.MouseLocation;
-                _pendingWranglerLocation = null;
-                InsertWranglerAtConnection(connection, click);
             }
         }
 

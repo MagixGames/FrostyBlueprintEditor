@@ -19,7 +19,6 @@
         <Costura>
           <IncludeAssemblies>
             Prism
-            Nodify
           </IncludeAssemblies>
         </Costura>
       </Weavers>
@@ -133,7 +132,6 @@
     <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Nodify" Version="7.3.0" />
     <PackageReference Include="Prism.Core" Version="8.1.97" />
   </ItemGroup>
 

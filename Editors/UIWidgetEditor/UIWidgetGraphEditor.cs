@@ -417,18 +417,14 @@ namespace BlueprintEditorPlugin.Editors.UIWidgetEditor
 
             #endregion
 
-            // Layout loading must run on the UI thread to ensure all vertex dispatches are complete
-            Application.Current.Dispatcher.Invoke(() =>
+            if (!LayoutManager.LayoutExists($"{assetEntry.Name}.lyt"))
             {
-                if (!LayoutManager.LayoutExists($"{assetEntry.Name}.lyt"))
-                {
-                    LayoutManager.SortLayout();
-                }
-                else
-                {
-                    LayoutManager.LoadLayoutRelative($"{assetEntry.Name}.lyt");
-                }
-            });
+                LayoutManager.SortLayout();
+            }
+            else
+            {
+                LayoutManager.LoadLayoutRelative($"{assetEntry.Name}.lyt");
+            }
         }
 
         private void OnAddLayerClick(object sender, RoutedEventArgs routedEventArgs)
