@@ -1069,6 +1069,19 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor
             {
                 case Key.Delete:
                 {
+                    List<IVertex> toDelete = new List<IVertex>(NodeWrangler.SelectedVertices);
+                    foreach (IVertex vertex in toDelete)
+                    {
+                        if (vertex is IRedirect redirect &&
+                            (redirect.SourceRedirect != null || redirect.TargetRedirect != null))
+                        {
+                            if (redirect.SourceRedirect != null)
+                                NodeWrangler.RemoveVertex(redirect.SourceRedirect);
+                            else
+                                NodeWrangler.RemoveVertex(redirect.TargetRedirect);
+                        }
+                    }
+
                     while (NodeWrangler.SelectedVertices.Count != 0)
                     {
                         NodeWrangler.RemoveVertex(NodeWrangler.SelectedVertices[0]);

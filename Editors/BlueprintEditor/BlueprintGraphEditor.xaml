@@ -151,6 +151,19 @@
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator/>
+                            <MenuItem Header="Redirect Source Port" Command="{Binding RedirectSourceCommand}"
+                                      ToolTip="Add a redirect node to the source port and its connections">
+                                <MenuItem.Icon>
+                                    <Image Source="pack://application:,,,/BlueprintEditorPlugin;component/images/AddRedirectIcon.png"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Redirect Target Port" Command="{Binding RedirectTargetCommand}"
+                                      ToolTip="Add a redirect node to the target port and its connections">
+                                <MenuItem.Icon>
+                                    <Image Source="pack://application:,,,/BlueprintEditorPlugin;component/images/AddRedirectIcon.png"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator/>
                             <MenuItem Header="Add Wrangler Node" Click="AddWranglerNode_OnClick">
                                 <MenuItem.Icon>
                                     <Image Source="pack://application:,,,/FrostyEditor;component/images/add.png"/>

@@ -97,6 +97,21 @@ namespace BlueprintEditorPlugin.Editors.BlueprintEditor.Connections
             Target.Node.NodeWrangler.RemoveConnection(this);
         }
 
+        public ICommand RedirectSourceCommand => new DelegateCommand(RedirectSource);
+        public ICommand RedirectTargetCommand => new DelegateCommand(RedirectTarget);
+
+        private void RedirectSource()
+        {
+            if (Source is EntityPort port)
+                port.Redirect();
+        }
+
+        private void RedirectTarget()
+        {
+            if (Target is EntityPort port)
+                port.Redirect();
+        }
+
         public ICommand FixCommand => new DelegateCommand(UserFix);
 
         public void UserFix()
